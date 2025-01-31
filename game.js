@@ -1,4 +1,4 @@
-const canvas = document.createElement("canvas");
+const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 document.body.appendChild(canvas);
 canvas.width = 400;
@@ -24,6 +24,7 @@ let lastUpdateTime = 0;
 let keys = {};
 let cameraOffset = { x: 0, y: 0 };
 let gameState = STATES.PLAYING;
+let score = 0;
 
 function gameLoop(timestamp) {
     if (timestamp - lastUpdateTime > SNAKE_SPEED) {
@@ -48,6 +49,7 @@ function update() {
         };
         snake.unshift(newHead);
         if (newHead.x === food.x && newHead.y === food.y) {
+            updateScore(GROWTH_AMOUNT);
             spawnFood();
             expandBoard(newHead);
             for (let i = 0; i < GROWTH_AMOUNT - 1; i++) { 
@@ -59,6 +61,11 @@ function update() {
         cameraOffset.x = snake[0].x;
         cameraOffset.y = snake[0].y;
     }
+}
+
+function updateScore(amount) {
+    score += amount;
+    document.getElementById("score").innerText = `Score: ${score}`;
 }
 
 function render() {
@@ -256,6 +263,7 @@ function spawnFood() {
 document.addEventListener("keydown", (e) => {
     keys[e.key] = true;
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault(); // Stops the page from scrolling
         cameraOffset.x = snake[0].x;
         cameraOffset.y = snake[0].y;
     }
