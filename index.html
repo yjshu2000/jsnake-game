@@ -7,9 +7,9 @@
     <style>
         body { 
             display: flex; 
-            justify-content: 
-            center; align-items: 
-            center; height: 100vh; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
             background-color: white; 
             flex-direction: column;
         }
@@ -17,6 +17,12 @@
             display: block; 
             border: 5px solid black;
             background-color: lightgray; 
+        }
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; 
+            width: fit-content;
         }
         #score {
             font-size: 24px;
@@ -26,8 +32,11 @@
     </style>
 </head>
 <body>
-    <div id="score">Score: 0</div>
-    <canvas id="gameCanvas"></canvas>
+    <div id="gameContainer">
+        <div id="score">Score: 0</div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
     <script src="game.js"></script>
 </body>
 </html>

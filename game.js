@@ -1,6 +1,6 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-document.body.appendChild(canvas);
+//document.body.appendChild(canvas);
 canvas.width = 400;
 canvas.height = 400;
 
@@ -126,7 +126,7 @@ function render() {
     });
     
     // Fill the entire area
-    ctx.fillStyle = "#1a1a1a";  // Dark gray for inside
+    ctx.fillStyle = "khaki";
     ctx.fill();
     
     // Now draw the border
