@@ -8,6 +8,11 @@ const UNIT_SIZE = 20;
 const CHUNK_SIZE = 4;
 const SNAKE_SPEED = 200; // more milliseconds = slower speed
 const GROWTH_AMOUNT = 4;
+const STATES = {
+    PLAYING: "PLAYING",
+    GAME_OVER: "GAME_OVER",
+    PAUSED: "PAUSED"
+};
 
 let snake = [{ x: 0, y: 0 }];
 let direction = { x: 0, y: 0 };
@@ -18,6 +23,7 @@ let chunks = new Set(["0,0","0,1","1,1", "1,0"]);
 let lastUpdateTime = 0;
 let keys = {};
 let cameraOffset = { x: 0, y: 0 };
+let gameState = STATES.PLAYING;
 
 function gameLoop(timestamp) {
     if (timestamp - lastUpdateTime > SNAKE_SPEED) {
@@ -29,29 +35,11 @@ function gameLoop(timestamp) {
 }
 
 function update() {
-    
-
-/*  
-    if (!keys["ArrowUp"] && !keys["ArrowDown"] && !keys["ArrowLeft"] && !keys["ArrowRight"]) {
-        direction = { x: 0, y: 0 };
-    }
-
-    // Store the previous direction before processing new input
-    if (direction.x !== 0 || direction.y !== 0) {
-        currentDirection = { ...direction };
-    }
-
-    // Check against currentDirection instead of direction
-    if (keys["ArrowUp"] && !(currentDirection.y === 1)) direction = { x: 0, y: -1 };
-    if (keys["ArrowDown"] && !(currentDirection.y === -1)) direction = { x: 0, y: 1 };
-    if (keys["ArrowLeft"] && !(currentDirection.x === 1)) direction = { x: -1, y: 0 };
-    if (keys["ArrowRight"] && !(currentDirection.x === -1)) direction = { x: 1, y: 0 };
- */
+    if (gameState !== STATES.PLAYING) return;
 
     if (nextDirection.x !== 0 || nextDirection.y !== 0) {
         direction = nextDirection;
     }
-    
     
     if (direction.x !== 0 || direction.y !== 0) {
         const newHead = {
@@ -74,6 +62,23 @@ function update() {
 }
 
 function render() {
+    if (gameState === STATES.GAME_OVER || gameState === STATES.PAUSED) {
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        if (gameState === STATES.GAME_OVER) {
+            ctx.fillStyle = "black";
+            ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+            ctx.fillText("reload to play again", canvas.width / 2, canvas.height / 2 + 40);
+        } else if (gameState === STATES.PAUSED) {
+            ctx.fillStyle = "#666";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
+        }
+        return;
+    }
+
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(canvas.width / 2 - cameraOffset.x, canvas.height / 2 - cameraOffset.y);
@@ -259,6 +264,18 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" && direction.y !== -1) nextDirection = { x: 0, y: 1 };
     if (e.key === "ArrowLeft" && direction.x !== 1) nextDirection = { x: -1, y: 0 };
     if (e.key === "ArrowRight" && direction.x !== -1) nextDirection = { x: 1, y: 0 };
+
+    if (e.key === "Escape") {
+        if (gameState === STATES.PLAYING) {
+            gameState = STATES.PAUSED;
+        } else if (gameState === STATES.PAUSED) {
+            gameState = STATES.PLAYING;
+        }
+    }
+
+    if (e.key === "x") { //testing the game over state
+        gameState = STATES.GAME_OVER;
+    }
 });
 
 document.addEventListener("keyup", (e) => {
