@@ -45,7 +45,7 @@ function update() {
         snake.unshift(newHead);
         if (newHead.x === food.x && newHead.y === food.y) {
             spawnFood();
-            expandBoard(newHead);
+            expandBoard();
         } else {
             snake.pop();
         }
@@ -65,6 +65,7 @@ function render() {
         ctx.strokeRect(cx * CHUNK_SIZE * UNIT_SIZE, cy * CHUNK_SIZE * UNIT_SIZE, CHUNK_SIZE * UNIT_SIZE, CHUNK_SIZE * UNIT_SIZE);
     }
     
+    //draw snake
     snake.forEach((segment, index) => {
         if (index === 0) {
             ctx.fillStyle = "blue";
@@ -80,16 +81,99 @@ function render() {
     ctx.restore();
 }
 
-function expandBoard(head) {
-    const cx = Math.floor(head.x / (CHUNK_SIZE * UNIT_SIZE));
-    const cy = Math.floor(head.y / (CHUNK_SIZE * UNIT_SIZE));
-    const key = `${cx},${cy}`;
-    if (!chunks.has(key)) chunks.add(key);
+function expandBoard() {
+    // Get the boundaries of existing chunks
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    
+    for (let chunk of chunks) {
+        const [x, y] = chunk.split(",").map(Number);
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+    }
+    
+    // Find all possible border positions
+    const borderPositions = [];
+    
+    // Define orthogonal directions (up, right, down, left)
+    const directions = [
+        { dx: 0, dy: -1 }, // up
+        { dx: 1, dy: 0 },  // right
+        { dx: 0, dy: 1 },  // down
+        { dx: -1, dy: 0 }  // left
+    ];
+    
+    // Check all positions around the border
+    for (let x = minX - 1; x <= maxX + 1; x++) {
+        for (let y = minY - 1; y <= maxY + 1; y++) {
+            const key = `${x},${y}`;
+            
+            // Skip if this chunk already exists
+            if (chunks.has(key)) continue;
+            
+            // Check if this position is orthogonally adjacent to an existing chunk
+            let isAdjacent = false;
+            for (const dir of directions) {
+                const adjacentKey = `${x + dir.dx},${y + dir.dy}`;
+                if (chunks.has(adjacentKey)) {
+                    isAdjacent = true;
+                    break;
+                }
+            }
+            
+            if (isAdjacent) {
+                borderPositions.push(key);
+            }
+        }
+    }
+    
+    // If there are valid positions, randomly select one and add it
+    if (borderPositions.length > 0) {
+        const newChunk = borderPositions[Math.floor(Math.random() * borderPositions.length)];
+        chunks.add(newChunk);
+        return true;
+    }
+    
+    return false;
 }
 
 function spawnFood() {
-    food.x = (Math.floor(Math.random() * 10) - 5) * UNIT_SIZE * CHUNK_SIZE;
-    food.y = (Math.floor(Math.random() * 10) - 5) * UNIT_SIZE * CHUNK_SIZE;
+    // Select a random chunk from the existing chunks
+    const chunkArray = Array.from(chunks);
+    const randomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
+    let [cx, cy] = randomChunk.split(",").map(Number);
+    
+    // Keep trying until we find a valid position
+    let isValidPosition = false;
+    while (!isValidPosition) {
+        // Generate potential food position within the chunk boundaries
+        const potentialX = cx * CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * CHUNK_SIZE) * UNIT_SIZE;
+        const potentialY = cy * CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * CHUNK_SIZE) * UNIT_SIZE;
+        
+        // Check if this position overlaps with any snake segment
+        isValidPosition = true;
+        for (const segment of snake) {
+            if (segment.x === potentialX && segment.y === potentialY) {
+                isValidPosition = false;
+                break;
+            }
+        }
+        
+        // If position is valid, set the food coordinates
+        if (isValidPosition) {
+            food.x = potentialX;
+            food.y = potentialY;
+            break;
+        }
+        
+        // If we've tried too many times in this chunk, pick a new random chunk
+        if (Math.random() < 0.1) {  // 10% chance to switch chunks if stuck
+            const newRandomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
+            [cx, cy] = newRandomChunk.split(",").map(Number);
+        }
+    }
 }
 
 document.addEventListener("keydown", (e) => {
