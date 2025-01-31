@@ -5,15 +5,14 @@ canvas.width = 400;
 canvas.height = 400;
 
 const UNIT_SIZE = 20;
-const CHUNK_SIZE = 10;
-const BOARD_CHUNK_SIZE = 4;
-const INITIAL_BOARD_SIZE = 16; //16x16, 4 chunks
+const CHUNK_SIZE = 4;
 const SNAKE_SPEED = 100;
+const GROWTH_AMOUNT = 4;
 
 let snake = [{ x: 0, y: 0 }];
 let direction = { x: 0, y: 0 };
 let food = { x: UNIT_SIZE * 5, y: UNIT_SIZE * 5 };
-let chunks = new Set(["0,0"]);
+let chunks = new Set(["0,0","0,1","1,1", "1,0"]);
 let lastUpdateTime = 0;
 let keys = {};
 let cameraOffset = { x: 0, y: 0 };
@@ -45,10 +44,13 @@ function update() {
         snake.unshift(newHead);
         if (newHead.x === food.x && newHead.y === food.y) {
             spawnFood();
-            expandBoard();
+            expandBoard(newHead);
+            for (let i = 0; i < GROWTH_AMOUNT - 1; i++) { 
+                snake.push({ ...snake[snake.length - 1] }); 
+            }
         } else {
             snake.pop();
-        }
+        }        
         cameraOffset.x = snake[0].x;
         cameraOffset.y = snake[0].y;
     }
@@ -59,11 +61,64 @@ function render() {
     ctx.save();
     ctx.translate(canvas.width / 2 - cameraOffset.x, canvas.height / 2 - cameraOffset.y);
     
-    for (let chunk of chunks) {
-        let [cx, cy] = chunk.split(",").map(Number);
-        ctx.strokeStyle = "#444";
-        ctx.strokeRect(cx * CHUNK_SIZE * UNIT_SIZE, cy * CHUNK_SIZE * UNIT_SIZE, CHUNK_SIZE * UNIT_SIZE, CHUNK_SIZE * UNIT_SIZE);
-    }
+    // Convert chunks to array of coordinates for easier processing
+    const chunkCoords = Array.from(chunks).map(chunk => {
+        const [x, y] = chunk.split(',').map(Number);
+        return { x, y };
+    });
+    
+    // First draw the fill
+    ctx.beginPath();
+    chunkCoords.forEach(chunk => {
+        const x = chunk.x * CHUNK_SIZE * UNIT_SIZE;
+        const y = chunk.y * CHUNK_SIZE * UNIT_SIZE;
+        const size = CHUNK_SIZE * UNIT_SIZE;
+        
+        // For each chunk, draw its rectangle
+        ctx.rect(x, y, size, size);
+    });
+    
+    // Fill the entire area
+    ctx.fillStyle = "#1a1a1a";  // Dark gray for inside
+    ctx.fill();
+    
+    // Now draw the border
+    ctx.beginPath();
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 2;
+    
+    // For each chunk, check each edge
+    chunkCoords.forEach(chunk => {
+        const x = chunk.x * CHUNK_SIZE * UNIT_SIZE;
+        const y = chunk.y * CHUNK_SIZE * UNIT_SIZE;
+        const size = CHUNK_SIZE * UNIT_SIZE;
+        
+        // Check top edge
+        if (!chunks.has(`${chunk.x},${chunk.y - 1}`)) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size, y);
+        }
+        
+        // Check right edge
+        if (!chunks.has(`${chunk.x + 1},${chunk.y}`)) {
+            ctx.moveTo(x + size, y);
+            ctx.lineTo(x + size, y + size);
+        }
+        
+        // Check bottom edge
+        if (!chunks.has(`${chunk.x},${chunk.y + 1}`)) {
+            ctx.moveTo(x, y + size);
+            ctx.lineTo(x + size, y + size);
+        }
+        
+        // Check left edge
+        if (!chunks.has(`${chunk.x - 1},${chunk.y}`)) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + size);
+        }
+    });
+    
+    ctx.stroke();
     
     //draw snake
     snake.forEach((segment, index) => {
