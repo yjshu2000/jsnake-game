@@ -5,6 +5,7 @@ canvas.width = 400;
 canvas.height = 400;
 
 const UNIT_SIZE = 20;
+const SNAKE_OVERLINE = UNIT_SIZE / 10;
 const CHUNK_SIZE = 4;
 const SNAKE_SPEED = 200; // more milliseconds = slower speed
 const GROWTH_AMOUNT = 4;
@@ -177,7 +178,7 @@ function render() {
     
     ctx.stroke();
     
-    //draw snake
+    // Draw snake
     snake.forEach((segment, index) => {
         if (index === 0) {
             ctx.fillStyle = "blue";
@@ -186,8 +187,20 @@ function render() {
         }
         ctx.fillRect(segment.x, segment.y, UNIT_SIZE, UNIT_SIZE);
     });
+    
+    // Continuous line on top of snake
+    ctx.strokeStyle = "chartreuse";
+    ctx.lineWidth = SNAKE_OVERLINE;
+    snake.forEach((segment, index) => {
+        if (index === 0) return;
+        const prevSegment = snake[index - 1];
+        ctx.beginPath();
+        ctx.moveTo(segment.x + UNIT_SIZE / 2, segment.y + UNIT_SIZE / 2);
+        ctx.lineTo(prevSegment.x + UNIT_SIZE / 2, prevSegment.y + UNIT_SIZE / 2);
+        ctx.stroke();
+    });
 
-    //draw food
+    // Draw food
     ctx.fillStyle = "red";
     ctx.fillRect(food.x, food.y, UNIT_SIZE, UNIT_SIZE);
     ctx.restore();
