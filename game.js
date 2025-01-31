@@ -91,9 +91,19 @@ function render() {
         ctx.font = "30px Arial";
         ctx.textAlign = "center";
         if (gameState === STATES.GAME_OVER) {
+            // Set the shadow properties for text
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.shadowBlur = 1;
+            ctx.shadowColor = "white";
+            // Draw the text
             ctx.fillStyle = "black";
             ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
             ctx.fillText("reload to play again", canvas.width / 2, canvas.height / 2 + 40);
+            // Reset the shadow properties
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.shadowBlur = 0;
         } else if (gameState === STATES.PAUSED) {
             ctx.fillStyle = "#666";
             ctx.fillRect(0, 0, canvas.width, canvas.height);

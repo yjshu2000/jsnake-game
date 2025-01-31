@@ -9,7 +9,7 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            
             background-color: white; 
             flex-direction: column;
         }
@@ -29,12 +29,31 @@
             font-weight: bold;
             margin-bottom: 10px;
         }
+        #header {
+            margin: 20px;
+        }
+        #instructions {
+            margin: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <div id="header">
+        <h1>Infinite Labyrinth Snake Game</h1>
+    </div>
+
     <div id="gameContainer">
         <div id="score">Score: 0</div>
         <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="instructions">
+        <h2>Instructions</h2>
+        <p>Use the arrow keys to move the snake.</p>
+        <p>Eat the food (red) to grow the snake.</p>
+        <p>Don't run into walls or self.</p>
+        <p>Board space will grow in random directions as snake grows.</p>
     </div>
 
     <script src="game.js"></script>
