@@ -6,11 +6,13 @@ canvas.height = 400;
 
 const UNIT_SIZE = 20;
 const CHUNK_SIZE = 4;
-const SNAKE_SPEED = 100;
+const SNAKE_SPEED = 200; // more milliseconds = slower speed
 const GROWTH_AMOUNT = 4;
 
 let snake = [{ x: 0, y: 0 }];
 let direction = { x: 0, y: 0 };
+let currentDirection = { x: 0, y: 0 };
+let nextDirection = { x: 0, y: 0 };
 let food = { x: UNIT_SIZE * 5, y: UNIT_SIZE * 5 };
 let chunks = new Set(["0,0","0,1","1,1", "1,0"]);
 let lastUpdateTime = 0;
@@ -27,14 +29,29 @@ function gameLoop(timestamp) {
 }
 
 function update() {
+    
+
+/*  
     if (!keys["ArrowUp"] && !keys["ArrowDown"] && !keys["ArrowLeft"] && !keys["ArrowRight"]) {
         direction = { x: 0, y: 0 };
     }
 
-    if (keys["ArrowUp"]) direction = { x: 0, y: -1 };
-    if (keys["ArrowDown"]) direction = { x: 0, y: 1 };
-    if (keys["ArrowLeft"]) direction = { x: -1, y: 0 };
-    if (keys["ArrowRight"]) direction = { x: 1, y: 0 };
+    // Store the previous direction before processing new input
+    if (direction.x !== 0 || direction.y !== 0) {
+        currentDirection = { ...direction };
+    }
+
+    // Check against currentDirection instead of direction
+    if (keys["ArrowUp"] && !(currentDirection.y === 1)) direction = { x: 0, y: -1 };
+    if (keys["ArrowDown"] && !(currentDirection.y === -1)) direction = { x: 0, y: 1 };
+    if (keys["ArrowLeft"] && !(currentDirection.x === 1)) direction = { x: -1, y: 0 };
+    if (keys["ArrowRight"] && !(currentDirection.x === -1)) direction = { x: 1, y: 0 };
+ */
+
+    if (nextDirection.x !== 0 || nextDirection.y !== 0) {
+        direction = nextDirection;
+    }
+    
     
     if (direction.x !== 0 || direction.y !== 0) {
         const newHead = {
@@ -237,6 +254,11 @@ document.addEventListener("keydown", (e) => {
         cameraOffset.x = snake[0].x;
         cameraOffset.y = snake[0].y;
     }
+
+    if (e.key === "ArrowUp" && direction.y !== 1) nextDirection = { x: 0, y: -1 };
+    if (e.key === "ArrowDown" && direction.y !== -1) nextDirection = { x: 0, y: 1 };
+    if (e.key === "ArrowLeft" && direction.x !== 1) nextDirection = { x: -1, y: 0 };
+    if (e.key === "ArrowRight" && direction.x !== -1) nextDirection = { x: 1, y: 0 };
 });
 
 document.addEventListener("keyup", (e) => {
