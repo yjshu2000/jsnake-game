@@ -57,6 +57,14 @@ function update() {
             return;
         }
 
+        // Check for collision with self
+        for (let i = 1; i < snake.length; i++) {
+            if (newHead.x === snake[i].x && newHead.y === snake[i].y) {
+                gameState = STATES.GAME_OVER;
+                return;
+            }
+        }
+
         snake.unshift(newHead);
         if (newHead.x === food.x && newHead.y === food.y) {
             updateScore(GROWTH_AMOUNT);
