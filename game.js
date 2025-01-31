@@ -47,6 +47,16 @@ function update() {
             x: snake[0].x + direction.x * UNIT_SIZE,
             y: snake[0].y + direction.y * UNIT_SIZE
         };
+
+        // Check for collision with chunk borders
+        const chunkX = Math.floor(newHead.x / (CHUNK_SIZE * UNIT_SIZE));
+        const chunkY = Math.floor(newHead.y / (CHUNK_SIZE * UNIT_SIZE));
+        const chunkKey = `${chunkX},${chunkY}`;
+        if (!chunks.has(chunkKey)) {
+            gameState = STATES.GAME_OVER;
+            return;
+        }
+
         snake.unshift(newHead);
         if (newHead.x === food.x && newHead.y === food.y) {
             updateScore(GROWTH_AMOUNT);
