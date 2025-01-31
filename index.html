@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
     <style>
-        body { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            
+        body {
             background-color: white; 
-            flex-direction: column;
         }
         canvas { 
             display: block; 
             border: 5px solid black;
             background-color: lightgray; 
+        }
+        #main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         #gameContainer {
             display: flex;
@@ -39,24 +40,34 @@
             padding: 10px;
             border: 2px dashed blueviolet;
         }
+        #version {
+            margin: 20px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>Infinite Labyrinth Snake Game</h1>
+    <div id="main">
+        <div id="header">
+            <h1>Infinite Labyrinth Snake Game</h1>
+        </div>
+    
+        <div id="gameContainer">
+            <div id="score">Score: 0</div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
+    
+        <div id="instructions">
+            <h2>Instructions</h2>
+            <p>Use the arrow keys to move the snake.</p>
+            <p>Eat the food (red) to grow the snake.</p>
+            <p>Don't run into walls or self.</p>
+            <p>Board space will grow in random directions as snake grows.</p>
+        </div>    
     </div>
-
-    <div id="gameContainer">
-        <div id="score">Score: 0</div>
-        <canvas id="gameCanvas"></canvas>
-    </div>
-
-    <div id="instructions">
-        <h2>Instructions</h2>
-        <p>Use the arrow keys to move the snake.</p>
-        <p>Eat the food (red) to grow the snake.</p>
-        <p>Don't run into walls or self.</p>
-        <p>Board space will grow in random directions as snake grows.</p>
+    
+    <div id="version">
+        <p>Version 1.0</p>
     </div>
 
     <script src="game.js"></script>
