@@ -84,10 +84,12 @@
             <div>
                 <label for="snakeSpeed">Snake Speed: </label>
                 <select id="snakeSpeed">
-                    <option value="300">300 (slow)</option>
+                    <option value="400">400 (slow)</option>
+                    <option value="300">300</option>
                     <option value="200" selected>200</option>
                     <option value="150">150</option>
-                    <option value="100">100 (fast)</option>
+                    <option value="100">100</option>
+                    <option value="50">50 (fastest)</option>
                 </select>
             </div>
             
@@ -125,14 +127,17 @@
             <p>On hitting self: -1 HP; -1 score</p>
             <p>On eating food: +0.1 HP; +4 score</p>
             <p>Board space will grow in random directions as snake grows.</p>
+            <p>Press ESC to pause/unpause.</p>
         </div>    
     </div>
     
     <div id="version">
+        <p>Version 1.1.2</p>
+        <p>added some more speed settings; also refactored js code to add restart</p>
+        <br>
+        <p>older version notes:</p>
         <p>Version 1.1</p>
-        <p>
-            added game settings and HP stuff. (note: default game settings match the original game.)
-        </p>
+        <p>added game settings and HP stuff. (note: default game settings match the original game.)</p>
     </div>
 
     <script src="game.js"></script>

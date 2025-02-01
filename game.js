@@ -17,104 +17,112 @@ const STATES = {
 let SNAKE_SPEED = 200; // more milliseconds = slower speed
 let MAX_HEALTH = 2;
 
-let snake = [{ x: 0, y: 0 }];
-let direction = { x: 0, y: 0 };
-let currentDirection = { x: 0, y: 0 };
-let nextDirection = { x: 0, y: 0 };
-let food = { x: UNIT_SIZE * 5, y: UNIT_SIZE * 5 };
-let chunks = new Set(["0,0","0,1","1,1", "1,0"]);
-let lastUpdateTime = 0;
-let keys = {};
-let cameraOffset = { x: 0, y: 0 };
-let gameState = STATES.PLAYING;
-let score = 0;
-let currentHP = MAX_HEALTH;
+const gameState = {};
+
+function initialization() {
+    gameState.snake = [{ x: 0, y: 0 }];
+    gameState.direction = { x: 0, y: 0 };
+    gameState.currentDirection = { x: 0, y: 0 };
+    gameState.nextDirection = { x: 0, y: 0 };
+    gameState.food = { x: UNIT_SIZE * 5, y: UNIT_SIZE * 5 };
+    gameState.chunks = new Set(["0,0", "0,1", "1,1", "1,0"]);
+    gameState.lastUpdateTime = 0;
+    gameState.keys = {};
+    gameState.cameraOffset = { x: 0, y: 0 };
+    gameState.state = STATES.PLAYING;
+    gameState.score = 0;
+    gameState.currentHP = MAX_HEALTH;
+}
+
+initialization();
 
 function startGame() {
     document.getElementById("gameContainer").style.display = "block";
     document.getElementById("gameInitialization").style.display = "none";
     SNAKE_SPEED = document.getElementById("snakeSpeed").value;
     MAX_HEALTH = document.getElementById("maxHealth").value; 
-    currentHP = MAX_HEALTH;
+    gameState.currentHP = MAX_HEALTH;
     //set the health bar dimensions
     document.getElementById("healthBarContainer").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
     document.getElementById("healthBar").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
     document.getElementById("healthBarContainer").style.height = `${UNIT_SIZE}px`;
     document.getElementById("healthBar").style.height = `${UNIT_SIZE}px`;
+    //set score to 0
+    document.getElementById("score").innerText = `Score: 0`;
 }
 
 function gameLoop(timestamp) {
-    if (timestamp - lastUpdateTime > SNAKE_SPEED) {
+    if (timestamp - gameState.lastUpdateTime > SNAKE_SPEED) {
         update();
-        lastUpdateTime = timestamp;
+        gameState.lastUpdateTime = timestamp;
     }
     render();
     requestAnimationFrame(gameLoop);
 }
 
 function update() {
-    if (gameState !== STATES.PLAYING) return;
+    if (gameState.state !== STATES.PLAYING) return;
 
-    if (nextDirection.x !== 0 || nextDirection.y !== 0) {
-        direction = nextDirection;
+    if (gameState.nextDirection.x !== 0 || gameState.nextDirection.y !== 0) {
+        gameState.direction = gameState.nextDirection;
     }
     
-    if (direction.x !== 0 || direction.y !== 0) {
+    if (gameState.direction.x !== 0 || gameState.direction.y !== 0) {
         const newHead = {
-            x: snake[0].x + direction.x * UNIT_SIZE,
-            y: snake[0].y + direction.y * UNIT_SIZE
+            x: gameState.snake[0].x + gameState.direction.x * UNIT_SIZE,
+            y: gameState.snake[0].y + gameState.direction.y * UNIT_SIZE
         };
 
         // Check for collision with chunk borders
         const chunkX = Math.floor(newHead.x / (CHUNK_SIZE * UNIT_SIZE));
         const chunkY = Math.floor(newHead.y / (CHUNK_SIZE * UNIT_SIZE));
         const chunkKey = `${chunkX},${chunkY}`;
-        if (!chunks.has(chunkKey)) {
-            gameState = STATES.GAME_OVER;
+        if (!gameState.chunks.has(chunkKey)) {
+            gameState.state = STATES.GAME_OVER;
             return;
         }
 
         // Check for collision with self
-        for (let i = 1; i < snake.length; i++) {
-            if (newHead.x === snake[i].x && newHead.y === snake[i].y) {
+        for (let i = 1; i < gameState.snake.length; i++) {
+            if (newHead.x === gameState.snake[i].x && newHead.y === gameState.snake[i].y) {
                 updateScore(-1);
-                currentHP -= 1;
-                document.getElementById("healthBar").style.width = `${UNIT_SIZE * currentHP}px`;
-                if (currentHP <= 0) {
-                    gameState = STATES.GAME_OVER;
+                gameState.currentHP -= 1;
+                document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+                if (gameState.currentHP <= 0) {
+                    gameState.state = STATES.GAME_OVER;
                     return;
                 }
             }
         }
 
-        snake.unshift(newHead);
-        if (newHead.x === food.x && newHead.y === food.y) {
+        gameState.snake.unshift(newHead);
+        if (newHead.x === gameState.food.x && newHead.y === gameState.food.y) {
             updateScore(GROWTH_AMOUNT);
-            currentHP = Math.min(currentHP + 0.1, MAX_HEALTH);
-            document.getElementById("healthBar").style.width = `${UNIT_SIZE * currentHP}px`;
+            gameState.currentHP = Math.min(gameState.currentHP + 0.1, MAX_HEALTH);
+            document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
             spawnFood();
             expandBoard(newHead);
             for (let i = 0; i < GROWTH_AMOUNT - 1; i++) { 
-                snake.push({ ...snake[snake.length - 1] }); 
+                gameState.snake.push({ ...gameState.snake[gameState.snake.length - 1] }); 
             }
         } else {
-            snake.pop();
+            gameState.snake.pop();
         }        
-        cameraOffset.x = snake[0].x;
-        cameraOffset.y = snake[0].y;
+        gameState.cameraOffset.x = gameState.snake[0].x;
+        gameState.cameraOffset.y = gameState.snake[0].y;
     }
 }
 
 function updateScore(amount) {
-    score += amount;
-    document.getElementById("score").innerText = `Score: ${score}`;
+    gameState.score += amount;
+    document.getElementById("score").innerText = `Score: ${gameState.score}`;
 }
 
 function render() {
-    if (gameState === STATES.GAME_OVER || gameState === STATES.PAUSED) {
+    if (gameState.state === STATES.GAME_OVER || gameState.state === STATES.PAUSED) {
         ctx.font = "30px Arial";
         ctx.textAlign = "center";
-        if (gameState === STATES.GAME_OVER) {
+        if (gameState.state === STATES.GAME_OVER) {
             // Set the shadow properties for text
             ctx.shadowOffsetX = 1;
             ctx.shadowOffsetY = 1;
@@ -123,12 +131,14 @@ function render() {
             // Draw the text
             ctx.fillStyle = "black";
             ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-            ctx.fillText("reload to play again", canvas.width / 2, canvas.height / 2 + 40);
+            ctx.font = "24px Arial";
+            ctx.fillText("press enter to play again", canvas.width / 2, canvas.height / 2 + 40);
+            ctx.fillText("reload to update settings", canvas.width / 2, canvas.height / 2 + 80);
             // Reset the shadow properties
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
             ctx.shadowBlur = 0;
-        } else if (gameState === STATES.PAUSED) {
+        } else if (gameState.state === STATES.PAUSED) {
             ctx.fillStyle = "#666";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "black";
@@ -140,10 +150,10 @@ function render() {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    ctx.translate(canvas.width / 2 - cameraOffset.x, canvas.height / 2 - cameraOffset.y);
+    ctx.translate(canvas.width / 2 - gameState.cameraOffset.x, canvas.height / 2 - gameState.cameraOffset.y);
     
     // Convert chunks to array of coordinates for easier processing
-    const chunkCoords = Array.from(chunks).map(chunk => {
+    const chunkCoords = Array.from(gameState.chunks).map(chunk => {
         const [x, y] = chunk.split(',').map(Number);
         return { x, y };
     });
@@ -175,25 +185,25 @@ function render() {
         const size = CHUNK_SIZE * UNIT_SIZE;
         
         // Check top edge
-        if (!chunks.has(`${chunk.x},${chunk.y - 1}`)) {
+        if (!gameState.chunks.has(`${chunk.x},${chunk.y - 1}`)) {
             ctx.moveTo(x, y);
             ctx.lineTo(x + size, y);
         }
         
         // Check right edge
-        if (!chunks.has(`${chunk.x + 1},${chunk.y}`)) {
+        if (!gameState.chunks.has(`${chunk.x + 1},${chunk.y}`)) {
             ctx.moveTo(x + size, y);
             ctx.lineTo(x + size, y + size);
         }
         
         // Check bottom edge
-        if (!chunks.has(`${chunk.x},${chunk.y + 1}`)) {
+        if (!gameState.chunks.has(`${chunk.x},${chunk.y + 1}`)) {
             ctx.moveTo(x, y + size);
             ctx.lineTo(x + size, y + size);
         }
         
         // Check left edge
-        if (!chunks.has(`${chunk.x - 1},${chunk.y}`)) {
+        if (!gameState.chunks.has(`${chunk.x - 1},${chunk.y}`)) {
             ctx.moveTo(x, y);
             ctx.lineTo(x, y + size);
         }
@@ -202,7 +212,7 @@ function render() {
     ctx.stroke();
     
     // Draw snake
-    snake.forEach((segment, index) => {
+    gameState.snake.forEach((segment, index) => {
         if (index === 0) {
             ctx.fillStyle = "blue";
         } else {
@@ -214,9 +224,9 @@ function render() {
     // Continuous line on top of snake
     ctx.strokeStyle = "chartreuse";
     ctx.lineWidth = SNAKE_OVERLINE;
-    snake.forEach((segment, index) => {
+    gameState.snake.forEach((segment, index) => {
         if (index === 0) return;
-        const prevSegment = snake[index - 1];
+        const prevSegment = gameState.snake[index - 1];
         ctx.beginPath();
         ctx.moveTo(segment.x + UNIT_SIZE / 2, segment.y + UNIT_SIZE / 2);
         ctx.lineTo(prevSegment.x + UNIT_SIZE / 2, prevSegment.y + UNIT_SIZE / 2);
@@ -225,7 +235,7 @@ function render() {
 
     // Draw food
     ctx.fillStyle = "red";
-    ctx.fillRect(food.x, food.y, UNIT_SIZE, UNIT_SIZE);
+    ctx.fillRect(gameState.food.x, gameState.food.y, UNIT_SIZE, UNIT_SIZE);
     ctx.restore();
 }
 
@@ -234,7 +244,7 @@ function expandBoard() {
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity, maxY = -Infinity;
     
-    for (let chunk of chunks) {
+    for (let chunk of gameState.chunks) {
         const [x, y] = chunk.split(",").map(Number);
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
@@ -259,13 +269,13 @@ function expandBoard() {
             const key = `${x},${y}`;
             
             // Skip if this chunk already exists
-            if (chunks.has(key)) continue;
+            if (gameState.chunks.has(key)) continue;
             
             // Check if this position is orthogonally adjacent to an existing chunk
             let isAdjacent = false;
             for (const dir of directions) {
                 const adjacentKey = `${x + dir.dx},${y + dir.dy}`;
-                if (chunks.has(adjacentKey)) {
+                if (gameState.chunks.has(adjacentKey)) {
                     isAdjacent = true;
                     break;
                 }
@@ -280,7 +290,7 @@ function expandBoard() {
     // If there are valid positions, randomly select one and add it
     if (borderPositions.length > 0) {
         const newChunk = borderPositions[Math.floor(Math.random() * borderPositions.length)];
-        chunks.add(newChunk);
+        gameState.chunks.add(newChunk);
         return true;
     }
     
@@ -289,7 +299,7 @@ function expandBoard() {
 
 function spawnFood() {
     // Select a random chunk from the existing chunks
-    const chunkArray = Array.from(chunks);
+    const chunkArray = Array.from(gameState.chunks);
     const randomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
     let [cx, cy] = randomChunk.split(",").map(Number);
     
@@ -302,7 +312,7 @@ function spawnFood() {
         
         // Check if this position overlaps with any snake segment
         isValidPosition = true;
-        for (const segment of snake) {
+        for (const segment of gameState.snake) {
             if (segment.x === potentialX && segment.y === potentialY) {
                 isValidPosition = false;
                 break;
@@ -311,8 +321,8 @@ function spawnFood() {
         
         // If position is valid, set the food coordinates
         if (isValidPosition) {
-            food.x = potentialX;
-            food.y = potentialY;
+            gameState.food.x = potentialX;
+            gameState.food.y = potentialY;
             break;
         }
         
@@ -325,33 +335,38 @@ function spawnFood() {
 }
 
 document.addEventListener("keydown", (e) => {
-    keys[e.key] = true;
+    gameState.keys[e.key] = true;
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
         e.preventDefault(); // Stops the page from scrolling
-        cameraOffset.x = snake[0].x;
-        cameraOffset.y = snake[0].y;
+        gameState.cameraOffset.x = gameState.snake[0].x;
+        gameState.cameraOffset.y = gameState.snake[0].y;
     }
 
-    if (e.key === "ArrowUp" && direction.y !== 1) nextDirection = { x: 0, y: -1 };
-    if (e.key === "ArrowDown" && direction.y !== -1) nextDirection = { x: 0, y: 1 };
-    if (e.key === "ArrowLeft" && direction.x !== 1) nextDirection = { x: -1, y: 0 };
-    if (e.key === "ArrowRight" && direction.x !== -1) nextDirection = { x: 1, y: 0 };
+    if (e.key === "ArrowUp" && gameState.direction.y !== 1) gameState.nextDirection = { x: 0, y: -1 };
+    if (e.key === "ArrowDown" && gameState.direction.y !== -1) gameState.nextDirection = { x: 0, y: 1 };
+    if (e.key === "ArrowLeft" && gameState.direction.x !== 1) gameState.nextDirection = { x: -1, y: 0 };
+    if (e.key === "ArrowRight" && gameState.direction.x !== -1) gameState.nextDirection = { x: 1, y: 0 };
 
     if (e.key === "Escape") {
-        if (gameState === STATES.PLAYING) {
-            gameState = STATES.PAUSED;
-        } else if (gameState === STATES.PAUSED) {
-            gameState = STATES.PLAYING;
+        if (gameState.state === STATES.PLAYING) {
+            gameState.state = STATES.PAUSED;
+        } else if (gameState.state === STATES.PAUSED) {
+            gameState.state = STATES.PLAYING;
         }
     }
 
     if (e.key === "x") { //testing the game over state
-        gameState = STATES.GAME_OVER;
+        gameState.state = STATES.GAME_OVER;
+    }
+
+    if (e.key === "Enter" && gameState.state === STATES.GAME_OVER) {
+        startGame();
+        initialization();
     }
 });
 
 document.addEventListener("keyup", (e) => {
-    keys[e.key] = false;
+    gameState.keys[e.key] = false;
 });
 
 requestAnimationFrame(gameLoop);
