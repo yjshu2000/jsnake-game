@@ -7,13 +7,15 @@ canvas.height = 400;
 const UNIT_SIZE = 20;
 const SNAKE_OVERLINE = UNIT_SIZE / 10;
 const CHUNK_SIZE = 4;
-const SNAKE_SPEED = 200; // more milliseconds = slower speed
 const GROWTH_AMOUNT = 4;
 const STATES = {
     PLAYING: "PLAYING",
     GAME_OVER: "GAME_OVER",
     PAUSED: "PAUSED"
 };
+
+let SNAKE_SPEED = 200; // more milliseconds = slower speed
+let MAX_HEALTH = 2;
 
 let snake = [{ x: 0, y: 0 }];
 let direction = { x: 0, y: 0 };
@@ -26,6 +28,20 @@ let keys = {};
 let cameraOffset = { x: 0, y: 0 };
 let gameState = STATES.PLAYING;
 let score = 0;
+let currentHP = MAX_HEALTH;
+
+function startGame() {
+    document.getElementById("gameContainer").style.display = "block";
+    document.getElementById("gameInitialization").style.display = "none";
+    SNAKE_SPEED = document.getElementById("snakeSpeed").value;
+    MAX_HEALTH = document.getElementById("maxHealth").value; 
+    currentHP = MAX_HEALTH;
+    //set the health bar dimensions
+    document.getElementById("healthBarContainer").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
+    document.getElementById("healthBar").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
+    document.getElementById("healthBarContainer").style.height = `${UNIT_SIZE}px`;
+    document.getElementById("healthBar").style.height = `${UNIT_SIZE}px`;
+}
 
 function gameLoop(timestamp) {
     if (timestamp - lastUpdateTime > SNAKE_SPEED) {
@@ -61,14 +77,21 @@ function update() {
         // Check for collision with self
         for (let i = 1; i < snake.length; i++) {
             if (newHead.x === snake[i].x && newHead.y === snake[i].y) {
-                gameState = STATES.GAME_OVER;
-                return;
+                updateScore(-1);
+                currentHP -= 1;
+                document.getElementById("healthBar").style.width = `${UNIT_SIZE * currentHP}px`;
+                if (currentHP <= 0) {
+                    gameState = STATES.GAME_OVER;
+                    return;
+                }
             }
         }
 
         snake.unshift(newHead);
         if (newHead.x === food.x && newHead.y === food.y) {
             updateScore(GROWTH_AMOUNT);
+            currentHP = Math.min(currentHP + 0.1, MAX_HEALTH);
+            document.getElementById("healthBar").style.width = `${UNIT_SIZE * currentHP}px`;
             spawnFood();
             expandBoard(newHead);
             for (let i = 0; i < GROWTH_AMOUNT - 1; i++) { 

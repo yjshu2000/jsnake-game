@@ -19,19 +19,47 @@
             align-items: center;
             justify-content: center;
         }
+        #header {
+            margin: 20px;
+            font-weight: bold;
+        }
+        #gameInitialization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px;
+            gap: 20px;
+        }
         #gameContainer {
             display: flex;
             flex-direction: column;
             align-items: flex-start; 
             width: fit-content;
         }
-        #score {
+        .label {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 10px;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
         }
-        #header {
-            margin: 20px;
+        #healthFlexBox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #healthBarContainer {
+            width: 20px;
+            height: 20px;
+            background-color: lightgray;
+            border: 2px solid black;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        #healthBar {
+            width: 20px;
+            height: 20px;
+            background-color: purple;
         }
         #instructions {
             margin: 20px;
@@ -51,9 +79,41 @@
         <div id="header">
             <h1>Infinite Labyrinth Snake Game</h1>
         </div>
+
+        <div id="gameInitialization">
+            <div>
+                <label for="snakeSpeed">Snake Speed: </label>
+                <select id="snakeSpeed">
+                    <option value="300">300 (slow)</option>
+                    <option value="200" selected>200</option>
+                    <option value="150">150</option>
+                    <option value="100">100 (fast)</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="maxHealth">Max Health: </label>
+                <select id="maxHealth">
+                    <option value="8">8</option>
+                    <option value="4">4</option>
+                    <option value="2">2</option>
+                    <option value="1" selected>1</option>
+                </select>
+            </div>
+            
+            <div id="startButton">
+                <button onclick="startGame()">Start Game</button>
+            </div>
+        </div>
     
-        <div id="gameContainer">
-            <div id="score">Score: 0</div>
+        <div id="gameContainer" style="display: none;">
+            <div id="score" class="label">Score: 0</div>
+            <div id="healthFlexBox">
+                <div id="healthLabel" class="label">HP:</div>
+                <div id="healthBarContainer">
+                    <div id="healthBar"></div>
+                </div>
+            </div>
             <canvas id="gameCanvas"></canvas>
         </div>
     
@@ -61,13 +121,18 @@
             <h2>Instructions</h2>
             <p>Use the arrow keys to move the snake.</p>
             <p>Eat the food (red) to grow the snake.</p>
-            <p>Don't run into walls or self.</p>
+            <p>Game over on hitting a wall or HP reaches 0.</p>
+            <p>On hitting self: -1 HP; -1 score</p>
+            <p>On eating food: +0.1 HP; +4 score</p>
             <p>Board space will grow in random directions as snake grows.</p>
         </div>    
     </div>
     
     <div id="version">
-        <p>Version 1.0.1</p>
+        <p>Version 1.1</p>
+        <p>
+            added game settings and HP stuff. (note: default game settings match the original game.)
+        </p>
     </div>
 
     <script src="game.js"></script>
