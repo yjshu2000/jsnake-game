@@ -85,7 +85,7 @@ function update() {
         // Check for collision with self
         for (let i = 1; i < gameState.snake.length; i++) {
             if (newHead.x === gameState.snake[i].x && newHead.y === gameState.snake[i].y) {
-                updateScore(-1);
+                updateScore(-0.1);
                 gameState.currentHP -= 1;
                 document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
                 if (gameState.currentHP <= 0) {
@@ -114,7 +114,7 @@ function update() {
 }
 
 function updateScore(amount) {
-    gameState.score += amount;
+    gameState.score = parseFloat((gameState.score + amount).toFixed(2));
     document.getElementById("score").innerText = `Score: ${gameState.score}`;
 }
 
