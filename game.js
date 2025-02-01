@@ -6,7 +6,7 @@ canvas.height = 400;
 
 const UNIT_SIZE = 20;
 const SNAKE_OVERLINE = UNIT_SIZE / 10;
-const CHUNK_SIZE = 4;
+const BOARD_CHUNK_SIZE = 4;
 const GROWTH_AMOUNT = 4;
 const STATES = {
     PLAYING: "PLAYING",
@@ -16,16 +16,27 @@ const STATES = {
 
 let SNAKE_SPEED = 200; // more milliseconds = slower speed
 let MAX_HEALTH = 2;
+let INDICATOR_ON = true;
 
 const gameState = {};
+
+function initializeBoard(width, length) {
+    let boardChunks = new Set();
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < length; y++) {
+            boardChunks.add(`${x},${y}`);
+        }
+    }
+    return boardChunks;
+}
 
 function initialization() {
     gameState.snake = [{ x: 0, y: 0 }];
     gameState.direction = { x: 0, y: 0 };
     gameState.currentDirection = { x: 0, y: 0 };
     gameState.nextDirection = { x: 0, y: 0 };
-    gameState.food = { x: UNIT_SIZE * 5, y: UNIT_SIZE * 5 };
-    gameState.chunks = new Set(["0,0", "0,1", "1,1", "1,0"]);
+    gameState.food = { x: UNIT_SIZE * 3, y: UNIT_SIZE * 3 };
+    gameState.boardChunks = initializeBoard(2, 2);
     gameState.lastUpdateTime = 0;
     gameState.keys = {};
     gameState.cameraOffset = { x: 0, y: 0 };
@@ -47,7 +58,10 @@ function startGame() {
     document.getElementById("healthBar").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
     document.getElementById("healthBarContainer").style.height = `${UNIT_SIZE}px`;
     document.getElementById("healthBar").style.height = `${UNIT_SIZE}px`;
-    //set score to 0
+
+    gameState.boardChunks = initializeBoard(document.getElementById("boardW").value, document.getElementById("boardL").value);
+    INDICATOR_ON = document.getElementById("indicator").checked;
+
     document.getElementById("score").innerText = `Score: 0`;
 }
 
@@ -73,11 +87,11 @@ function update() {
             y: gameState.snake[0].y + gameState.direction.y * UNIT_SIZE
         };
 
-        // Check for collision with chunk borders
-        const chunkX = Math.floor(newHead.x / (CHUNK_SIZE * UNIT_SIZE));
-        const chunkY = Math.floor(newHead.y / (CHUNK_SIZE * UNIT_SIZE));
+        // Check for collision with board chunk borders
+        const chunkX = Math.floor(newHead.x / (BOARD_CHUNK_SIZE * UNIT_SIZE));
+        const chunkY = Math.floor(newHead.y / (BOARD_CHUNK_SIZE * UNIT_SIZE));
         const chunkKey = `${chunkX},${chunkY}`;
-        if (!gameState.chunks.has(chunkKey)) {
+        if (!gameState.boardChunks.has(chunkKey)) {
             gameState.state = STATES.GAME_OVER;
             return;
         }
@@ -94,7 +108,7 @@ function update() {
                 }
             }
         }
-
+        // Check for collision with food
         gameState.snake.unshift(newHead);
         if (newHead.x === gameState.food.x && newHead.y === gameState.food.y) {
             updateScore(GROWTH_AMOUNT);
@@ -152,8 +166,8 @@ function render() {
     ctx.save();
     ctx.translate(canvas.width / 2 - gameState.cameraOffset.x, canvas.height / 2 - gameState.cameraOffset.y);
     
-    // Convert chunks to array of coordinates for easier processing
-    const chunkCoords = Array.from(gameState.chunks).map(chunk => {
+    // Convert board chunks to array of coordinates for easier processing
+    const chunkCoords = Array.from(gameState.boardChunks).map(chunk => {
         const [x, y] = chunk.split(',').map(Number);
         return { x, y };
     });
@@ -161,9 +175,9 @@ function render() {
     // First draw the fill
     ctx.beginPath();
     chunkCoords.forEach(chunk => {
-        const x = chunk.x * CHUNK_SIZE * UNIT_SIZE;
-        const y = chunk.y * CHUNK_SIZE * UNIT_SIZE;
-        const size = CHUNK_SIZE * UNIT_SIZE;
+        const x = chunk.x * BOARD_CHUNK_SIZE * UNIT_SIZE;
+        const y = chunk.y * BOARD_CHUNK_SIZE * UNIT_SIZE;
+        const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
         
         // For each chunk, draw its rectangle
         ctx.rect(x, y, size, size);
@@ -180,30 +194,30 @@ function render() {
     
     // For each chunk, check each edge
     chunkCoords.forEach(chunk => {
-        const x = chunk.x * CHUNK_SIZE * UNIT_SIZE;
-        const y = chunk.y * CHUNK_SIZE * UNIT_SIZE;
-        const size = CHUNK_SIZE * UNIT_SIZE;
+        const x = chunk.x * BOARD_CHUNK_SIZE * UNIT_SIZE;
+        const y = chunk.y * BOARD_CHUNK_SIZE * UNIT_SIZE;
+        const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
         
         // Check top edge
-        if (!gameState.chunks.has(`${chunk.x},${chunk.y - 1}`)) {
+        if (!gameState.boardChunks.has(`${chunk.x},${chunk.y - 1}`)) {
             ctx.moveTo(x, y);
             ctx.lineTo(x + size, y);
         }
         
         // Check right edge
-        if (!gameState.chunks.has(`${chunk.x + 1},${chunk.y}`)) {
+        if (!gameState.boardChunks.has(`${chunk.x + 1},${chunk.y}`)) {
             ctx.moveTo(x + size, y);
             ctx.lineTo(x + size, y + size);
         }
         
         // Check bottom edge
-        if (!gameState.chunks.has(`${chunk.x},${chunk.y + 1}`)) {
+        if (!gameState.boardChunks.has(`${chunk.x},${chunk.y + 1}`)) {
             ctx.moveTo(x, y + size);
             ctx.lineTo(x + size, y + size);
         }
         
         // Check left edge
-        if (!gameState.chunks.has(`${chunk.x - 1},${chunk.y}`)) {
+        if (!gameState.boardChunks.has(`${chunk.x - 1},${chunk.y}`)) {
             ctx.moveTo(x, y);
             ctx.lineTo(x, y + size);
         }
@@ -237,14 +251,37 @@ function render() {
     ctx.fillStyle = "red";
     ctx.fillRect(gameState.food.x, gameState.food.y, UNIT_SIZE, UNIT_SIZE);
     ctx.restore();
+
+    // Draw food direction indicator
+    if (INDICATOR_ON) {
+        const indicatorRadius = UNIT_SIZE / 3;
+        let paddingX = 0;
+        let paddingY = 0;
+        
+        // Calculate food position relative to camera view
+        const relativeX = gameState.food.x - gameState.cameraOffset.x;
+        const relativeY = gameState.food.y - gameState.cameraOffset.y;
+        if (relativeX > 0) paddingX = UNIT_SIZE;
+        if (relativeY > 0) paddingY = UNIT_SIZE;
+        
+        // Calculate indicator position
+        let indicatorX = Math.min(Math.max(relativeX + canvas.width / 2, paddingX), canvas.width - paddingX) + UNIT_SIZE/2;
+        let indicatorY = Math.min(Math.max(relativeY + canvas.height / 2, paddingY), canvas.height - paddingY) + UNIT_SIZE/2;
+        
+        // Draw the indicator
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(indicatorX, indicatorY, indicatorRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }
 
 function expandBoard() {
-    // Get the boundaries of existing chunks
+    // Get the boundaries of existing board chunks
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity, maxY = -Infinity;
     
-    for (let chunk of gameState.chunks) {
+    for (let chunk of gameState.boardChunks) {
         const [x, y] = chunk.split(",").map(Number);
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
@@ -269,13 +306,13 @@ function expandBoard() {
             const key = `${x},${y}`;
             
             // Skip if this chunk already exists
-            if (gameState.chunks.has(key)) continue;
+            if (gameState.boardChunks.has(key)) continue;
             
             // Check if this position is orthogonally adjacent to an existing chunk
             let isAdjacent = false;
             for (const dir of directions) {
                 const adjacentKey = `${x + dir.dx},${y + dir.dy}`;
-                if (gameState.chunks.has(adjacentKey)) {
+                if (gameState.boardChunks.has(adjacentKey)) {
                     isAdjacent = true;
                     break;
                 }
@@ -290,7 +327,7 @@ function expandBoard() {
     // If there are valid positions, randomly select one and add it
     if (borderPositions.length > 0) {
         const newChunk = borderPositions[Math.floor(Math.random() * borderPositions.length)];
-        gameState.chunks.add(newChunk);
+        gameState.boardChunks.add(newChunk);
         return true;
     }
     
@@ -298,8 +335,8 @@ function expandBoard() {
 }
 
 function spawnFood() {
-    // Select a random chunk from the existing chunks
-    const chunkArray = Array.from(gameState.chunks);
+    // Select a random board chunk from the existing board chunks
+    const chunkArray = Array.from(gameState.boardChunks);
     const randomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
     let [cx, cy] = randomChunk.split(",").map(Number);
     
@@ -307,9 +344,8 @@ function spawnFood() {
     let isValidPosition = false;
     while (!isValidPosition) {
         // Generate potential food position within the chunk boundaries
-        const potentialX = cx * CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * CHUNK_SIZE) * UNIT_SIZE;
-        const potentialY = cy * CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * CHUNK_SIZE) * UNIT_SIZE;
-        
+        const potentialX = cx * BOARD_CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * BOARD_CHUNK_SIZE) * UNIT_SIZE;
+        const potentialY = cy * BOARD_CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * BOARD_CHUNK_SIZE) * UNIT_SIZE;
         // Check if this position overlaps with any snake segment
         isValidPosition = true;
         for (const segment of gameState.snake) {
@@ -318,14 +354,12 @@ function spawnFood() {
                 break;
             }
         }
-        
         // If position is valid, set the food coordinates
         if (isValidPosition) {
             gameState.food.x = potentialX;
             gameState.food.y = potentialY;
             break;
         }
-        
         // If we've tried too many times in this chunk, pick a new random chunk
         if (Math.random() < 0.1) {  // 10% chance to switch chunks if stuck
             const newRandomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
@@ -360,8 +394,8 @@ document.addEventListener("keydown", (e) => {
     }
 
     if (e.key === "Enter" && gameState.state === STATES.GAME_OVER) {
-        startGame();
         initialization();
+        startGame();
     }
 });
 

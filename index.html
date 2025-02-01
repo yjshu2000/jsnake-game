@@ -4,75 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Labyrinth Snake Game</title>
-    <style>
-        body {
-            background-color: white; 
-        }
-        canvas { 
-            display: block; 
-            border: 5px solid black;
-            background-color: lightgray; 
-        }
-        #main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        #header {
-            margin: 20px;
-            font-weight: bold;
-        }
-        #gameInitialization {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 20px;
-            gap: 20px;
-        }
-        #gameContainer {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; 
-            width: fit-content;
-        }
-        .label {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
-        }
-        #healthFlexBox {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #healthBarContainer {
-            width: 20px;
-            height: 20px;
-            background-color: lightgray;
-            border: 2px solid black;
-            margin-bottom: 10px;
-            position: relative;
-        }
-        #healthBar {
-            width: 20px;
-            height: 20px;
-            background-color: purple;
-        }
-        #instructions {
-            margin: 20px;
-            text-align: center;
-            background-color: azure;
-            padding: 10px;
-            border: 2px dashed blueviolet;
-        }
-        #version {
-            margin: 20px;
-            text-align: left;
-        }
-    </style>
+    <link rel="stylesheet" href="stylish.css">
 </head>
 <body>
     <div id="main">
@@ -101,6 +33,29 @@
                     <option value="2">2</option>
                     <option value="1" selected>1</option>
                 </select>
+            </div>
+
+            <div>
+                <label for="boardW">Initial Board Width: </label>
+                <select id="boardW">
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2" selected>2</option>
+                    <option value="1">1</option>
+                </select>
+                <span>&nbsp;×&nbsp;</span>
+                <label for="boardL">Initial Board Length: </label>
+                <select id="boardL">
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2" selected>2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="indicator">Food direction indicator: </label>
+                <input type="checkbox" id="indicator" checked>
             </div>
             
             <div id="startButton">
@@ -132,10 +87,12 @@
     </div>
     
     <div id="version">
-        <p>Version 1.1.3</p>
-        <p>updated scoring system. the -0.1's are now just there to expose ppl using higher HP's :)</p>
+        <p>Version 1.2</p>
+        <p>added food direction indicator (optional) and also custom initial board size (had to change initial food position)</p>
         <br>
         <p>older version notes:</p>
+        <p>Version 1.1.3</p>
+        <p>updated scoring system. the -0.1's are now just there to expose ppl using higher HP's :)</p>
         <p>Version 1.1.2</p>
         <p>added some more speed settings; also refactored js code to add restart</p>
         <p>Version 1.1</p>

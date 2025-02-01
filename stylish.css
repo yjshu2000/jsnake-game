@@ -1,0 +1,67 @@
+body {
+    background-color: white; 
+}
+canvas { 
+    display: block; 
+    border: 5px solid black;
+    background-color: lightgray; 
+}
+#main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#header {
+    margin: 20px;
+    font-weight: bold;
+}
+#gameInitialization {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px;
+    gap: 20px;
+}
+#gameContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    width: fit-content;
+}
+.label {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+}
+#healthFlexBox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#healthBarContainer {
+    width: 20px;
+    height: 20px;
+    background-color: lightgray;
+    border: 2px solid black;
+    margin-bottom: 10px;
+    position: relative;
+}
+#healthBar {
+    width: 20px;
+    height: 20px;
+    background-color: purple;
+}
+#instructions {
+    margin: 20px;
+    text-align: center;
+    background-color: azure;
+    padding: 10px;
+    border: 2px dashed blueviolet;
+}
+#version {
+    margin: 20px;
+    text-align: left;
+}
