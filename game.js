@@ -1,7 +1,9 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = 400;
-canvas.height = 400;
+//import * as utils from "./utils.js"; //shjt's getting ugly; here's a utils file
+
+const gameCanvas = document.getElementById("gameCanvas");
+const gameCtx = gameCanvas.getContext("2d");
+gameCanvas.width = 400;
+gameCanvas.height = 400;
 
 const UNIT_SIZE = 20;
 const SNAKE_OVERLINE = UNIT_SIZE / 10;
@@ -59,6 +61,7 @@ function startGame() {
 
     gameState.boardChunks = initializeBoard(document.getElementById("boardW").value, document.getElementById("boardL").value);
     INDICATOR_ON = document.getElementById("indicator").checked;
+    document.getElementById("overviewCanvas").style.display = "none";
 
     document.getElementById("score").innerText = `Score: 0`;
 }
@@ -131,7 +134,19 @@ function updateScore(amount) {
 }
 
 function render() {
-    if (gameState.state === STATES.GAME_OVER || gameState.state === STATES.PAUSED) {
+    renderGame(gameCanvas, gameCtx);
+    if (gameState.state === STATES.GAME_OVER) {
+        document.getElementById("overviewCanvas").style.display = "block";
+        const overviewCanvas = document.getElementById("overviewCanvas");
+        const overviewCtx = overviewCanvas.getContext("2d");
+        overviewCanvas.width = gameCanvas.width * 2;
+        overviewCanvas.height = gameCanvas.height * 2;
+        renderGame(overviewCanvas, overviewCtx, true);
+    }
+}
+
+function renderGame(canvas, ctx, isOverview = false) {
+    if ((gameState.state === STATES.GAME_OVER || gameState.state === STATES.PAUSED) && !isOverview) {
         ctx.font = "30px Arial";
         ctx.textAlign = "center";
         if (gameState.state === STATES.GAME_OVER) {
@@ -162,15 +177,26 @@ function render() {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    ctx.translate(canvas.width / 2 - gameState.cameraOffset.x, canvas.height / 2 - gameState.cameraOffset.y);
+    // Scale and translate stuff
+    if (isOverview) {
+        const boardBounds = getBounds(gameState.boardChunks);
+        const shiftX = ((boardBounds.maxX + boardBounds.minX + 1) / 2) * BOARD_CHUNK_SIZE * UNIT_SIZE;
+        const shiftY = ((boardBounds.maxY + boardBounds.minY + 1) / 2) * BOARD_CHUNK_SIZE * UNIT_SIZE;
+        
+        const scaleFactor = Math.min(1, 
+            canvas.width / ((boardBounds.maxX - boardBounds.minX + 4) * BOARD_CHUNK_SIZE * UNIT_SIZE), 
+            canvas.height / ((boardBounds.maxY - boardBounds.minY + 4) * BOARD_CHUNK_SIZE * UNIT_SIZE));
+        ctx.scale(scaleFactor, scaleFactor);
+        ctx.translate(canvas.width / scaleFactor / 2 - shiftX, canvas.height / scaleFactor / 2 - shiftY);
+    }
+    else {
+        ctx.translate(canvas.width / 2 - gameState.cameraOffset.x, canvas.height / 2 - gameState.cameraOffset.y);
+    }
     
     // Convert board chunks to array of coordinates for easier processing
-    const chunkCoords = Array.from(gameState.boardChunks).map(chunk => {
-        const [x, y] = chunk.split(',').map(Number);
-        return { x, y };
-    });
+    const chunkCoords = getChunkCoords(gameState.boardChunks);
     
-    // First draw the fill
+    // First draw chunk fill
     ctx.beginPath();
     chunkCoords.forEach(chunk => {
         const x = chunk.x * BOARD_CHUNK_SIZE * UNIT_SIZE;
@@ -195,25 +221,21 @@ function render() {
         const x = chunk.x * BOARD_CHUNK_SIZE * UNIT_SIZE;
         const y = chunk.y * BOARD_CHUNK_SIZE * UNIT_SIZE;
         const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
-        
         // Check top edge
         if (!gameState.boardChunks.has(`${chunk.x},${chunk.y - 1}`)) {
             ctx.moveTo(x, y);
             ctx.lineTo(x + size, y);
         }
-        
         // Check right edge
         if (!gameState.boardChunks.has(`${chunk.x + 1},${chunk.y}`)) {
             ctx.moveTo(x + size, y);
             ctx.lineTo(x + size, y + size);
         }
-        
         // Check bottom edge
         if (!gameState.boardChunks.has(`${chunk.x},${chunk.y + 1}`)) {
             ctx.moveTo(x, y + size);
             ctx.lineTo(x + size, y + size);
         }
-        
         // Check left edge
         if (!gameState.boardChunks.has(`${chunk.x - 1},${chunk.y}`)) {
             ctx.moveTo(x, y);
@@ -251,7 +273,7 @@ function render() {
     ctx.restore();
 
     // Draw food direction indicator
-    if (INDICATOR_ON) {
+    if (INDICATOR_ON && !isOverview) {
         const indicatorRadius = UNIT_SIZE / 3;
         let paddingX = 0;
         let paddingY = 0;
@@ -402,3 +424,25 @@ document.addEventListener("keyup", (e) => {
 });
 
 requestAnimationFrame(gameLoop);
+
+//nevermind the utils.js for now... apparently modules dont work in local file testing
+function getChunkCoords(boardChunks) {
+    return Array.from(boardChunks).map(chunk => {
+        const [x, y] = chunk.split(',').map(Number);
+        return { x, y };
+    });
+}
+
+function getBounds(boardChunks) {
+    const chunkCoords = getChunkCoords(boardChunks);
+
+    const xValues = chunkCoords.map(coord => coord.x);
+    const yValues = chunkCoords.map(coord => coord.y);
+
+    return {
+        minX: Math.min(...xValues),
+        maxX: Math.max(...xValues),
+        minY: Math.min(...yValues),
+        maxY: Math.max(...yValues)
+    };
+}
