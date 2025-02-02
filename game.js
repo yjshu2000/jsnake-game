@@ -18,6 +18,7 @@ const STATES = {
 let SNAKE_SPEED = 200; // more milliseconds = slower speed
 let MAX_HEALTH = 2;
 let INDICATOR_ON = true;
+let PAUSE_OVERVIEW_ON = true;
 
 const gameState = {};
 
@@ -61,6 +62,7 @@ function startGame() {
 
     gameState.boardChunks = initializeBoard(document.getElementById("boardW").value, document.getElementById("boardL").value);
     INDICATOR_ON = document.getElementById("indicator").checked;
+    PAUSE_OVERVIEW_ON = document.getElementById("pauseOverview").checked;
     document.getElementById("overviewCanvas").style.display = "none";
 
     document.getElementById("score").innerText = `Score: 0`;
@@ -135,13 +137,16 @@ function updateScore(amount) {
 
 function render() {
     renderGame(gameCanvas, gameCtx);
-    if (gameState.state === STATES.GAME_OVER) {
+    if (gameState.state === STATES.GAME_OVER || (gameState.state === STATES.PAUSED && PAUSE_OVERVIEW_ON)) {
         document.getElementById("overviewCanvas").style.display = "block";
         const overviewCanvas = document.getElementById("overviewCanvas");
         const overviewCtx = overviewCanvas.getContext("2d");
         overviewCanvas.width = gameCanvas.width * 2;
         overviewCanvas.height = gameCanvas.height * 2;
         renderGame(overviewCanvas, overviewCtx, true);
+    }
+    else {
+        document.getElementById("overviewCanvas").style.display = "none";
     }
 }
 
@@ -445,4 +450,50 @@ function getBounds(boardChunks) {
         minY: Math.min(...yValues),
         maxY: Math.max(...yValues)
     };
+}
+
+//preset functions
+function presetMyBabySnek() {
+    document.getElementById("boardW").value = 4;
+    document.getElementById("boardL").value = 4;
+    document.getElementById("snakeSpeed").value = 200;
+    document.getElementById("maxHealth").value = 8;
+    document.getElementById("indicator").checked = true;
+    document.getElementById("pauseOverview").checked = true;
+}
+
+function presetDefault() {
+    document.getElementById("boardW").value = 3;
+    document.getElementById("boardL").value = 3;
+    document.getElementById("snakeSpeed").value = 200;
+    document.getElementById("maxHealth").value = 2;
+    document.getElementById("indicator").checked = true;
+    document.getElementById("pauseOverview").checked = false;
+}
+
+function presetOriginal() {
+    document.getElementById("boardW").value = 2;
+    document.getElementById("boardL").value = 2;
+    document.getElementById("snakeSpeed").value = 200;
+    document.getElementById("maxHealth").value = 1;
+    document.getElementById("indicator").checked = false;
+    document.getElementById("pauseOverview").checked = false;
+}
+
+function presetImpossible() {
+    document.getElementById("boardW").value = 2;
+    document.getElementById("boardL").value = 1;
+    document.getElementById("snakeSpeed").value = 50;
+    document.getElementById("maxHealth").value = 1;
+    document.getElementById("indicator").checked = true;
+    document.getElementById("pauseOverview").checked = false;
+}
+
+function presetHard() {
+    document.getElementById("boardW").value = 2;
+    document.getElementById("boardL").value = 2;
+    document.getElementById("snakeSpeed").value = 100;
+    document.getElementById("maxHealth").value = 1;
+    document.getElementById("indicator").checked = true;
+    document.getElementById("pauseOverview").checked = false;
 }

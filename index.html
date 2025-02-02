@@ -58,6 +58,34 @@
                 <label for="indicator">Food direction indicator: </label>
                 <input type="checkbox" id="indicator" checked>
             </div>
+            <div>
+                <label for="pauseOverview">Show overview on Pause: </label>
+                <input type="checkbox" id="pauseOverview">
+            </div>
+        
+            <div id="presets">
+                <p>Presets:&nbsp;&nbsp;</p>
+                <div>
+                    <button onclick="presetDefault()">default</button>
+                    <span>infinite labyrinth snake, as it's meant to be played.</span>
+                </div>
+                <div>
+                    <button onclick="presetMyBabySnek()">dev's fav</button>
+                    <span>the dev's a lil baby that needs a lotta handholding.</span>
+                </div>
+                <div>
+                    <button onclick="presetOriginal()">original</button>
+                    <span>the OG game from version 1.0.</span>
+                </div>
+                <div>
+                    <button onclick="presetHard()">hard mode</button>
+                    <span>for the better gamers out there.</span>
+                </div>
+                <div>
+                    <button onclick="presetImpossible()">impossible</button>
+                    <span>SNEK GO FASSSST TURN TURN TURN</span>
+                </div>
+            </div>
             
             <div id="startButton">
                 <button onclick="startGame()">Start Game</button>
@@ -90,10 +118,12 @@
     </div>
     
     <div id="version">
-        <p>Version 1.3 2025 Feb 2 H14</p>
-        <p>after a horrifying amount of trials and tribulations. added an overview of the board when game ends. it goes away when you restart.</p>
+        <p>Version 1.3.1 2025 Feb 2 H18</p>
+        <p>added some presets. don't turn on the overview pause thing; it makes the game way too easy and ruins the dungeon crawler vibe.</p>
         <br>
         <p>older version notes:</p>
+        <p>Version 1.3 2025 Feb 2 H14</p>
+        <p>after a horrifying amount of trials and tribulations. added an overview of the board when game ends. it goes away when you restart.</p>
         <p>Version 1.2.1 2025 Feb 1 H18</p>
         <p>added a favicon! yay</p>
         <p>Version 1.2 2025 Feb 1 H15</p>
