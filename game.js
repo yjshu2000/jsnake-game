@@ -1,6 +1,5 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-//document.body.appendChild(canvas);
 canvas.width = 400;
 canvas.height = 400;
 
@@ -53,7 +52,6 @@ function startGame() {
     SNAKE_SPEED = document.getElementById("snakeSpeed").value;
     MAX_HEALTH = document.getElementById("maxHealth").value; 
     gameState.currentHP = MAX_HEALTH;
-    //set the health bar dimensions
     document.getElementById("healthBarContainer").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
     document.getElementById("healthBar").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
     document.getElementById("healthBarContainer").style.height = `${UNIT_SIZE}px`;
