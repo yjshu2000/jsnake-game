@@ -152,7 +152,7 @@ function render() {
 
 function renderGame(canvas, ctx, isOverview = false) {
     if ((gameState.state === STATES.GAME_OVER || gameState.state === STATES.PAUSED) && !isOverview) {
-        ctx.font = "30px Arial";
+        ctx.font = "30px Tahoma";
         ctx.textAlign = "center";
         if (gameState.state === STATES.GAME_OVER) {
             // Set the shadow properties for text
@@ -163,7 +163,7 @@ function renderGame(canvas, ctx, isOverview = false) {
             // Draw the text
             ctx.fillStyle = "black";
             ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-            ctx.font = "24px Arial";
+            ctx.font = "24px Tahoma";
             ctx.fillText("press enter to play again", canvas.width / 2, canvas.height / 2 + 40);
             ctx.fillText("reload to update settings", canvas.width / 2, canvas.height / 2 + 80);
             // Reset the shadow properties
@@ -182,8 +182,18 @@ function renderGame(canvas, ctx, isOverview = false) {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    // Scale and translate stuff
+
     if (isOverview) {
+        // put the score in the corner of the canvas
+        ctx.font = "24px Tahoma";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "black";
+        ctx.fillText(`Score: ${gameState.score}`, BOARD_CHUNK_SIZE * UNIT_SIZE + 1, BOARD_CHUNK_SIZE * UNIT_SIZE + 1);
+        ctx.fillText(`Score: ${gameState.score}`, BOARD_CHUNK_SIZE * UNIT_SIZE - 1, BOARD_CHUNK_SIZE * UNIT_SIZE - 1);
+        ctx.fillStyle = "white";
+        ctx.fillText(`Score: ${gameState.score}`, BOARD_CHUNK_SIZE * UNIT_SIZE, BOARD_CHUNK_SIZE * UNIT_SIZE);
+
+        // Scale and translate stuff
         const boardBounds = getBounds(gameState.boardChunks);
         const shiftX = ((boardBounds.maxX + boardBounds.minX + 1) / 2) * BOARD_CHUNK_SIZE * UNIT_SIZE;
         const shiftY = ((boardBounds.maxY + boardBounds.minY + 1) / 2) * BOARD_CHUNK_SIZE * UNIT_SIZE;
@@ -193,6 +203,8 @@ function renderGame(canvas, ctx, isOverview = false) {
             canvas.height / ((boardBounds.maxY - boardBounds.minY + 4) * BOARD_CHUNK_SIZE * UNIT_SIZE));
         ctx.scale(scaleFactor, scaleFactor);
         ctx.translate(canvas.width / scaleFactor / 2 - shiftX, canvas.height / scaleFactor / 2 - shiftY);
+
+        
     }
     else {
         ctx.translate(canvas.width / 2 - gameState.cameraOffset.x, canvas.height / 2 - gameState.cameraOffset.y);
