@@ -34,12 +34,14 @@ function initializeBoard(width, length) {
 
 function initialization() {
     gameState.snake = [{ x: 0, y: 0 }];
+    gameState.snakePositions = new Set(["0,0"]);
     gameState.direction = { x: 0, y: 0 };
     gameState.currentDirection = { x: 0, y: 0 };
     gameState.nextDirection = { x: 0, y: 0 };
     gameState.food = { x: UNIT_SIZE * 3, y: UNIT_SIZE * 3 };
     gameState.boardChunks = initializeBoard(2, 2);
     gameState.lastUpdateTime = 0;
+    gameState.lastRenderTime = 0;
     gameState.keys = {};
     gameState.cameraOffset = { x: 0, y: 0 };
     gameState.state = STATES.PLAYING;
@@ -73,7 +75,10 @@ function gameLoop(timestamp) {
         update();
         gameState.lastUpdateTime = timestamp;
     }
-    render();
+    if (timestamp - gameState.lastRenderTime > 33) { // 30 FPS
+        render();
+        gameState.lastRenderTime = timestamp;
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -100,19 +105,20 @@ function update() {
         }
 
         // Check for collision with self
-        for (let i = 1; i < gameState.snake.length; i++) {
-            if (newHead.x === gameState.snake[i].x && newHead.y === gameState.snake[i].y) {
-                updateScore(-0.1);
-                gameState.currentHP -= 1;
-                document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
-                if (gameState.currentHP <= 0) {
-                    gameState.state = STATES.GAME_OVER;
-                    return;
-                }
+        const newHeadKey = `${newHead.x},${newHead.y}`;
+        if (gameState.snakePositions.has(newHeadKey)) {
+            updateScore(-0.1);
+            gameState.currentHP -= 1;
+            document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+            if (gameState.currentHP <= 0) {
+                gameState.state = STATES.GAME_OVER;
+                return;
             }
         }
-        // Check for collision with food
+
         gameState.snake.unshift(newHead);
+        gameState.snakePositions.add(newHeadKey);
+        // Check for collision with food
         if (newHead.x === gameState.food.x && newHead.y === gameState.food.y) {
             updateScore(GROWTH_AMOUNT);
             gameState.currentHP = Math.min(gameState.currentHP + 0.1, MAX_HEALTH);
@@ -123,7 +129,8 @@ function update() {
                 gameState.snake.push({ ...gameState.snake[gameState.snake.length - 1] }); 
             }
         } else {
-            gameState.snake.pop();
+            const tail = gameState.snake.pop();
+            gameState.snakePositions.delete(`${tail.x},${tail.y}`);
         }        
         gameState.cameraOffset.x = gameState.snake[0].x;
         gameState.cameraOffset.y = gameState.snake[0].y;
@@ -216,11 +223,11 @@ function renderGame(canvas, ctx, isOverview = false) {
     // First draw chunk fill
     ctx.beginPath();
     chunkCoords.forEach(chunk => {
-        const x = chunk.x * BOARD_CHUNK_SIZE * UNIT_SIZE;
-        const y = chunk.y * BOARD_CHUNK_SIZE * UNIT_SIZE;
         const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
-        
-        // For each chunk, draw its rectangle
+        const x = chunk.x * size;
+        const y = chunk.y * size;
+        if (!isOverview && !isInCamView(x, y)) return;
+        // For each chunk in view, draw its rectangle
         ctx.rect(x, y, size, size);
     });
     
@@ -238,25 +245,34 @@ function renderGame(canvas, ctx, isOverview = false) {
         const x = chunk.x * BOARD_CHUNK_SIZE * UNIT_SIZE;
         const y = chunk.y * BOARD_CHUNK_SIZE * UNIT_SIZE;
         const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
-        // Check top edge
-        if (!gameState.boardChunks.has(`${chunk.x},${chunk.y - 1}`)) {
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + size, y);
-        }
-        // Check right edge
-        if (!gameState.boardChunks.has(`${chunk.x + 1},${chunk.y}`)) {
-            ctx.moveTo(x + size, y);
-            ctx.lineTo(x + size, y + size);
-        }
-        // Check bottom edge
-        if (!gameState.boardChunks.has(`${chunk.x},${chunk.y + 1}`)) {
-            ctx.moveTo(x, y + size);
-            ctx.lineTo(x + size, y + size);
-        }
-        // Check left edge
-        if (!gameState.boardChunks.has(`${chunk.x - 1},${chunk.y}`)) {
-            ctx.moveTo(x, y);
-            ctx.lineTo(x, y + size);
+        // Only process this chunk if it's in view OR one of its neighbors is in view
+        if (isInCamView(x, y) ||
+            isInCamView(x + size, y) ||   // Right neighbor
+            isInCamView(x - size, y) ||   // Left neighbor
+            isInCamView(x, y + size) ||   // Bottom neighbor
+            isInCamView(x, y - size) ||   // Top neighbor
+            isOverview
+        ) {
+            // Check top edge
+            if (!gameState.boardChunks.has(`${chunk.x},${chunk.y - 1}`)) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + size, y);
+            }
+            // Check right edge
+            if (!gameState.boardChunks.has(`${chunk.x + 1},${chunk.y}`)) {
+                ctx.moveTo(x + size, y);
+                ctx.lineTo(x + size, y + size);
+            }
+            // Check bottom edge
+            if (!gameState.boardChunks.has(`${chunk.x},${chunk.y + 1}`)) {
+                ctx.moveTo(x, y + size);
+                ctx.lineTo(x + size, y + size);
+            }
+            // Check left edge
+            if (!gameState.boardChunks.has(`${chunk.x - 1},${chunk.y}`)) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x, y + size);
+            }
         }
     });
     
@@ -267,6 +283,7 @@ function renderGame(canvas, ctx, isOverview = false) {
         if (index === 0) {
             ctx.fillStyle = "blue";
         } else {
+            if (!isOverview && !isInCamView(segment.x, segment.y)) return;
             ctx.fillStyle = "green";
         }
         ctx.fillRect(segment.x, segment.y, UNIT_SIZE, UNIT_SIZE);
@@ -276,7 +293,7 @@ function renderGame(canvas, ctx, isOverview = false) {
     ctx.strokeStyle = "chartreuse";
     ctx.lineWidth = SNAKE_OVERLINE;
     gameState.snake.forEach((segment, index) => {
-        if (index === 0) return;
+        if (index === 0 || (!isOverview && !isInCamView(segment.x, segment.y))) return;
         const prevSegment = gameState.snake[index - 1];
         ctx.beginPath();
         ctx.moveTo(segment.x + UNIT_SIZE / 2, segment.y + UNIT_SIZE / 2);
@@ -462,6 +479,17 @@ function getBounds(boardChunks) {
         minY: Math.min(...yValues),
         maxY: Math.max(...yValues)
     };
+}
+
+function isInCamView(x, y) {
+    const halfWidth = gameCanvas.width / 2;
+    const halfHeight = gameCanvas.height / 2;
+    const padding = BOARD_CHUNK_SIZE * UNIT_SIZE;
+    return (
+        x >= gameState.cameraOffset.x - halfWidth - padding &&
+        x <= gameState.cameraOffset.x + halfWidth + padding &&
+        y >= gameState.cameraOffset.y - halfHeight - padding &&
+        y <= gameState.cameraOffset.y + halfHeight + padding);
 }
 
 //preset functions
