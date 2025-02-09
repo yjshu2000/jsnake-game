@@ -72,6 +72,7 @@ function startGame() {
 
 function gameLoop(timestamp) {
     if (timestamp - gameState.lastUpdateTime > SNAKE_SPEED) {
+        //console.log(timestamp - gameState.lastUpdateTime);
         update();
         gameState.lastUpdateTime = timestamp;
     }
@@ -424,16 +425,30 @@ function spawnFood() {
 
 document.addEventListener("keydown", (e) => {
     gameState.keys[e.key] = true;
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-        e.preventDefault(); // Stops the page from scrolling
-        gameState.cameraOffset.x = gameState.snake[0].x;
-        gameState.cameraOffset.y = gameState.snake[0].y;
-    }
-
-    if (e.key === "ArrowUp" && gameState.direction.y !== 1) gameState.nextDirection = { x: 0, y: -1 };
-    if (e.key === "ArrowDown" && gameState.direction.y !== -1) gameState.nextDirection = { x: 0, y: 1 };
-    if (e.key === "ArrowLeft" && gameState.direction.x !== 1) gameState.nextDirection = { x: -1, y: 0 };
-    if (e.key === "ArrowRight" && gameState.direction.x !== -1) gameState.nextDirection = { x: 1, y: 0 };
+        // Define arrow keys and numpad/num row equivalents
+        const upKeys = ["ArrowUp", "8"];
+        const downKeys = ["ArrowDown", "5"];
+        const leftKeys = ["ArrowLeft", "4"];
+        const rightKeys = ["ArrowRight", "6"];
+    
+        if ([...upKeys, ...downKeys, ...leftKeys, ...rightKeys].includes(e.key)) {
+            e.preventDefault(); // Stops the page from scrolling
+            gameState.cameraOffset.x = gameState.snake[0].x;
+            gameState.cameraOffset.y = gameState.snake[0].y;
+        }
+    
+        if (upKeys.includes(e.key) && gameState.direction.y !== 1) {
+            gameState.nextDirection = { x: 0, y: -1 };
+        }
+        if (downKeys.includes(e.key) && gameState.direction.y !== -1) {
+            gameState.nextDirection = { x: 0, y: 1 };
+        }
+        if (leftKeys.includes(e.key) && gameState.direction.x !== 1) {
+            gameState.nextDirection = { x: -1, y: 0 };
+        }
+        if (rightKeys.includes(e.key) && gameState.direction.x !== -1) {
+            gameState.nextDirection = { x: 1, y: 0 };
+        }
 
     if (e.key === "Escape") {
         if (gameState.state === STATES.PLAYING) {
