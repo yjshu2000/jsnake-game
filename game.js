@@ -425,30 +425,41 @@ function spawnFood() {
 
 document.addEventListener("keydown", (e) => {
     gameState.keys[e.key] = true;
-        // Define arrow keys and numpad/num row equivalents
-        const upKeys = ["ArrowUp", "8"];
-        const downKeys = ["ArrowDown", "5"];
-        const leftKeys = ["ArrowLeft", "4"];
-        const rightKeys = ["ArrowRight", "6"];
-    
-        if ([...upKeys, ...downKeys, ...leftKeys, ...rightKeys].includes(e.key)) {
-            e.preventDefault(); // Stops the page from scrolling
-            gameState.cameraOffset.x = gameState.snake[0].x;
-            gameState.cameraOffset.y = gameState.snake[0].y;
+    // Define arrow keys and numpad/num row equivalents
+    const upKeys = ["ArrowUp", "8"];
+    const downKeys = ["ArrowDown", "5"];
+    const leftKeys = ["ArrowLeft", "4"];
+    const rightKeys = ["ArrowRight", "6"];
+
+    if ([...upKeys, ...downKeys, ...leftKeys, ...rightKeys].includes(e.key)) {
+        e.preventDefault(); // Stops the page from scrolling
+        gameState.cameraOffset.x = gameState.snake[0].x;
+        gameState.cameraOffset.y = gameState.snake[0].y;
+    }
+    let newDirection = { x: 0, y: 0 };
+
+    if (upKeys.includes(e.key) && gameState.direction.y !== 1) {
+        newDirection = { x: 0, y: -1 };
+    }
+    if (downKeys.includes(e.key) && gameState.direction.y !== -1) {
+        newDirection = { x: 0, y: 1 };
+    }
+    if (leftKeys.includes(e.key) && gameState.direction.x !== 1) {
+        newDirection = { x: -1, y: 0 };
+    }
+    if (rightKeys.includes(e.key) && gameState.direction.x !== -1) {
+        newDirection = { x: 1, y: 0 };
+    }
+
+    if (newDirection.x !== 0 || newDirection.y !== 0) { //if newDirection is not 0, update nextDirection
+        gameState.nextDirection = newDirection;
+        
+        // force update ONLY if direction CHANGED
+        if (newDirection.x !== gameState.direction.x && newDirection.y !== gameState.direction.y) { 
+            update(); 
+            gameState.lastUpdateTime = performance.now();
         }
-    
-        if (upKeys.includes(e.key) && gameState.direction.y !== 1) {
-            gameState.nextDirection = { x: 0, y: -1 };
-        }
-        if (downKeys.includes(e.key) && gameState.direction.y !== -1) {
-            gameState.nextDirection = { x: 0, y: 1 };
-        }
-        if (leftKeys.includes(e.key) && gameState.direction.x !== 1) {
-            gameState.nextDirection = { x: -1, y: 0 };
-        }
-        if (rightKeys.includes(e.key) && gameState.direction.x !== -1) {
-            gameState.nextDirection = { x: 1, y: 0 };
-        }
+    }
 
     if (e.key === "Escape") {
         if (gameState.state === STATES.PLAYING) {
