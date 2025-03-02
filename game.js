@@ -528,6 +528,15 @@ function presetMyBabySnek() {
     document.getElementById("pauseOverview").checked = true;
 }
 
+function presetNewFav1() {
+    document.getElementById("boardW").value = 1;
+    document.getElementById("boardL").value = 1;
+    document.getElementById("snakeSpeed").value = 200;
+    document.getElementById("maxHealth").value = 8;
+    document.getElementById("indicator").checked = true;
+    document.getElementById("pauseOverview").checked = false;
+}
+
 function presetDefault() {
     document.getElementById("boardW").value = 3;
     document.getElementById("boardL").value = 3;
@@ -564,11 +573,3 @@ function presetHard() {
     document.getElementById("pauseOverview").checked = false;
 }
 
-function presetNewFav1() {
-    document.getElementById("boardW").value = 1;
-    document.getElementById("boardL").value = 1;
-    document.getElementById("snakeSpeed").value = 200;
-    document.getElementById("maxHealth").value = 8;
-    document.getElementById("indicator").checked = true;
-    document.getElementById("pauseOverview").checked = false;
-}
