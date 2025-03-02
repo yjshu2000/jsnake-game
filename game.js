@@ -563,3 +563,12 @@ function presetHard() {
     document.getElementById("indicator").checked = true;
     document.getElementById("pauseOverview").checked = false;
 }
+
+function presetNewFav1() {
+    document.getElementById("boardW").value = 1;
+    document.getElementById("boardL").value = 1;
+    document.getElementById("snakeSpeed").value = 200;
+    document.getElementById("maxHealth").value = 8;
+    document.getElementById("indicator").checked = true;
+    document.getElementById("pauseOverview").checked = false;
+}
