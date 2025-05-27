@@ -426,10 +426,10 @@ function spawnFood() {
 document.addEventListener("keydown", (e) => {
     gameState.keys[e.key] = true;
     // Define arrow keys and numpad/num row equivalents
-    const upKeys = ["ArrowUp", "8"];
-    const downKeys = ["ArrowDown", "5"];
-    const leftKeys = ["ArrowLeft", "4"];
-    const rightKeys = ["ArrowRight", "6"];
+    const upKeys = ["ArrowUp", "8", "w"];
+    const downKeys = ["ArrowDown", "5", "s"];
+    const leftKeys = ["ArrowLeft", "4", "a"];
+    const rightKeys = ["ArrowRight", "6", "d"];
 
     if ([...upKeys, ...downKeys, ...leftKeys, ...rightKeys].includes(e.key)) {
         e.preventDefault(); // Stops the page from scrolling
