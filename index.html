@@ -39,6 +39,7 @@
             <div>
                 <label for="boardW">Initial Board Width: </label>
                 <select id="boardW">
+                    <option value="8">8</option>
                     <option value="4">4</option>
                     <option value="3">3</option>
                     <option value="2" selected>2</option>
@@ -47,6 +48,7 @@
                 <span>&nbsp;×&nbsp;</span>
                 <label for="boardL">Initial Board Length: </label>
                 <select id="boardL">
+                    <option value="8">8</option>
                     <option value="4">4</option>
                     <option value="3">3</option>
                     <option value="2" selected>2</option>
@@ -122,36 +124,38 @@
     </div>
     
     <div id="version">
-        <p>Version 1.4.2 2025 May 27 H15</p>
-        <p>added wasd support because SOMEONE didn't have arrow keys on their KEYBOARD</p>
-        <br>
-        <p>older version notes:</p>
-        <!--ADD STUFF UNDER HERE-->
-        <p>Version 1.4.1 2025 Mar 1 H20</p>
-        <p>added a new preset (dev's new fav)</p>
-        <p>Version 1.4 2025 Feb 9 H15</p>
-        <p>PERFECTED RESPONSIVENESS!!! SPAM KEYS ALL YOU WANT! CHANGE DIRECTION INSTANTLY!!!</p>
-        <p>Version 1.3.4 2025 Feb 9 H14</p>
-        <p>added support for numpad 8456 as arrow keys.</p>
-        <p>Version 1.3.3 2025 Feb 7 H02</p>
-        <p>game performance optimizations.</p>
-        <p>Version 1.3.2 2025 Feb 3 H19</p>
-        <p>added score display in the overview.</p>
-        <p>older version notes:</p>
-        <p>Version 1.3.1 2025 Feb 2 H18</p>
-        <p>added some presets. don't turn on the overview pause thing; it makes the game way too easy and ruins the dungeon crawler vibe.</p>
-        <p>Version 1.3 2025 Feb 2 H14</p>
-        <p>after a horrifying amount of trials and tribulations. added an overview of the board when game ends. it goes away when you restart.</p>
-        <p>Version 1.2.1 2025 Feb 1 H18</p>
-        <p>added a favicon! yay</p>
-        <p>Version 1.2 2025 Feb 1 H15</p>
-        <p>added food direction indicator (optional) and also custom initial board size (had to change initial food position)</p>
-        <p>Version 1.1.3</p>
-        <p>updated scoring system. the -0.1's are now just there to expose ppl using higher HP's :)</p>
-        <p>Version 1.1.2</p>
-        <p>added some more speed settings; also refactored js code to add restart</p>
-        <p>Version 1.1</p>
-        <p>added game settings and HP stuff. (note: default game settings match the original game.)</p>
+        <details>
+            <summary>Version Notes</summary>
+            <p>Version 1.5 2025 Jun 26 H12</p>
+            <p>css updates. also, collapsible version notes; added bigger board value (testing smaller chunk sizes)</p>
+            <p>Version 1.4.2 2025 May 27 H15</p>
+            <p>added wasd support because SOMEONE didn't have arrow keys on their KEYBOARD</p>
+            <p>Version 1.4.1 2025 Mar 1 H20</p>
+            <p>added a new preset (dev's new fav)</p>
+            <p>Version 1.4 2025 Feb 9 H15</p>
+            <p>PERFECTED RESPONSIVENESS!!! SPAM KEYS ALL YOU WANT! CHANGE DIRECTION INSTANTLY!!!</p>
+            <p>Version 1.3.4 2025 Feb 9 H14</p>
+            <p>added support for numpad 8456 as arrow keys.</p>
+            <p>Version 1.3.3 2025 Feb 7 H02</p>
+            <p>game performance optimizations.</p>
+            <p>Version 1.3.2 2025 Feb 3 H19</p>
+            <p>added score display in the overview.</p>
+            <p>older version notes:</p>
+            <p>Version 1.3.1 2025 Feb 2 H18</p>
+            <p>added some presets. don't turn on the overview pause thing; it makes the game way too easy and ruins the dungeon crawler vibe.</p>
+            <p>Version 1.3 2025 Feb 2 H14</p>
+            <p>after a horrifying amount of trials and tribulations. added an overview of the board when game ends. it goes away when you restart.</p>
+            <p>Version 1.2.1 2025 Feb 1 H18</p>
+            <p>added a favicon! yay</p>
+            <p>Version 1.2 2025 Feb 1 H15</p>
+            <p>added food direction indicator (optional) and also custom initial board size (had to change initial food position)</p>
+            <p>Version 1.1.3</p>
+            <p>updated scoring system. the -0.1's are now just there to expose ppl using higher HP's :)</p>
+            <p>Version 1.1.2</p>
+            <p>added some more speed settings; also refactored js code to add restart</p>
+            <p>Version 1.1</p>
+            <p>added game settings and HP stuff. (note: default game settings match the original game.)</p>
+        </details>
     </div>
 
     <script src="game.js"></script>

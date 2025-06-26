@@ -1,5 +1,10 @@
+/* Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=PT+Serif&family=Quantico&family=Titillium+Web&display=swap');
+
+
 body {
     background-color: white; 
+    font-family: 'Titillium Web', sans-serif;
 }
 canvas { 
     display: block; 
@@ -15,6 +20,9 @@ canvas {
 #header {
     margin: 20px;
     font-weight: bold;
+    font-family: 'Quantico', sans-serif;
+    /*font-size: 2.2rem;*/
+    text-align: center;
 }
 #gameInitialization {
     display: flex;
@@ -23,11 +31,15 @@ canvas {
     justify-content: center;
     margin: 20px;
     gap: 20px;
+    font-family: 'Titillium Web', sans-serif;
 }
 #presets {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+#presets > div {
+  margin-bottom: 10px;
 }
 #gameContainer {
     display: flex;
@@ -68,10 +80,25 @@ canvas {
     margin: 20px;
     text-align: center;
     background-color: azure;
-    padding: 10px;
+    padding: 20px 40px;
     border: 2px dashed blueviolet;
+    font-family: 'PT Serif', serif;
 }
 #version {
     margin: 20px;
     text-align: left;
+    font-family: 'Titillium Web', sans-serif;
+}
+
+button {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #f2f2f2;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #e6e6e6;
 }
