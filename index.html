@@ -64,6 +64,16 @@
                 <label for="pauseOverview">Show overview on Pause: </label>
                 <input type="checkbox" id="pauseOverview">
             </div>
+            <div style="text-align:center">
+                <label for="foodPerKnight">Knight Spawn Rate: </label>
+                <select id="foodPerKnight">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                </select><br>
+                <span style="font-size:smaller; margin-top:0; line-height:1.1; display:block;">(per how many food pieces the number of knights on the board will increase)</span>
+            </div>
         
             <div id="presets">
                 <p>Presets:&nbsp;&nbsp;</p>
@@ -126,6 +136,8 @@
     <div id="version">
         <details>
             <summary>Version Notes</summary>
+            <p>Version 2 2025 Jul 9 H18</p>
+            <p>added knight enemy!! (might still need some balancing)</p>
             <p>Version 1.5 2025 Jun 26 H12</p>
             <p>css updates. also, collapsible version notes; added bigger board value (testing smaller chunk sizes)</p>
             <p>Version 1.4.2 2025 May 27 H15</p>

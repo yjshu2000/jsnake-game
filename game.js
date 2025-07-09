@@ -8,7 +8,13 @@ gameCanvas.height = 400;
 const UNIT_SIZE = 20;
 const SNAKE_OVERLINE = UNIT_SIZE / 10;
 const BOARD_CHUNK_SIZE = 4;
+
 const GROWTH_AMOUNT = 4;
+const FOOD_HEAL_RATE = 0.1; // health gained from eating food
+const SELF_COLLISION_DMG = 1;
+const HEAD_DMG_MULTIPLIER = 1.0;
+const BODY_DMG_MULTIPLIER = 0.1;
+
 const STATES = {
     PLAYING: "PLAYING",
     GAME_OVER: "GAME_OVER",
@@ -19,6 +25,13 @@ let SNAKE_SPEED = 200; // more milliseconds = slower speed
 let MAX_HEALTH = 2;
 let INDICATOR_ON = true;
 let PAUSE_OVERVIEW_ON = true;
+
+// enemy stats
+function getKnightDmg() { return MAX_HEALTH / 20; }
+function getKnightHealRate() { return getKnightDmg() * 4; } // health gained from killing a knight
+function getKnightAtkRate() { return SNAKE_SPEED * 3; }
+let KNIGHT_SCORE = 1; // score for killing a knight
+let FOOD_PER_KNIGHT = 10; //adjust for balance
 
 const gameState = {};
 
@@ -47,6 +60,8 @@ function initialization() {
     gameState.state = STATES.PLAYING;
     gameState.score = 0;
     gameState.currentHP = MAX_HEALTH;
+    gameState.knights = [];
+    gameState.foodEaten = 0;
 }
 
 initialization();
@@ -56,6 +71,7 @@ function startGame() {
     document.getElementById("gameInitialization").style.display = "none";
     SNAKE_SPEED = document.getElementById("snakeSpeed").value;
     MAX_HEALTH = document.getElementById("maxHealth").value; 
+    FOOD_PER_KNIGHT = parseInt(document.getElementById("foodPerKnight").value); // NEW: set from dropdown
     gameState.currentHP = MAX_HEALTH;
     document.getElementById("healthBarContainer").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
     document.getElementById("healthBar").style.width = `${UNIT_SIZE * MAX_HEALTH}px`;
@@ -109,7 +125,7 @@ function update() {
         const newHeadKey = `${newHead.x},${newHead.y}`;
         if (gameState.snakePositions.has(newHeadKey)) {
             updateScore(-0.1);
-            gameState.currentHP -= 1;
+            gameState.currentHP -= SELF_COLLISION_DMG;
             document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
             if (gameState.currentHP <= 0) {
                 gameState.state = STATES.GAME_OVER;
@@ -122,9 +138,14 @@ function update() {
         // Check for collision with food
         if (newHead.x === gameState.food.x && newHead.y === gameState.food.y) {
             updateScore(GROWTH_AMOUNT);
-            gameState.currentHP = Math.min(gameState.currentHP + 0.1, MAX_HEALTH);
+            gameState.currentHP = Math.min(gameState.currentHP + FOOD_HEAL_RATE, MAX_HEALTH);
             document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
             spawnFood();
+            gameState.foodEaten++;
+            if (gameState.foodEaten == 2 || 
+                (gameState.foodEaten > 0 && gameState.foodEaten % FOOD_PER_KNIGHT === 0)) {
+                spawnKnight();
+            }
             expandBoard(newHead);
             for (let i = 0; i < GROWTH_AMOUNT - 1; i++) { 
                 gameState.snake.push({ ...gameState.snake[gameState.snake.length - 1] }); 
@@ -132,7 +153,46 @@ function update() {
         } else {
             const tail = gameState.snake.pop();
             gameState.snakePositions.delete(`${tail.x},${tail.y}`);
-        }        
+        }
+        // Check for collision with knights
+        gameState.knights.forEach((knight, index) => {
+            if (newHead.x === knight.x && newHead.y === knight.y) {
+                // increase score, remove knight, and increase health by *2 knight dmg
+                updateScore(KNIGHT_SCORE);
+                gameState.currentHP = Math.min(gameState.currentHP + getKnightDmg() * 2, MAX_HEALTH);
+                document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+                gameState.knights.splice(index, 1);
+                spawnKnight(); // spawn a new knight immediately on knight death
+            }
+        });
+
+        // Knight damage logic: check if any snake segment is adjacent to any knight
+        const now = performance.now();
+        gameState.knights.forEach(knight => {
+            if (!knight.lastAttackTime) knight.lastAttackTime = 0;
+            if (now - knight.lastAttackTime >= getKnightAtkRate()) {
+                // Check all 8 adjacent squares for any snake segment
+                for (let i = 0; i < gameState.snake.length; i++) {
+                    const seg = gameState.snake[i];
+                    const dx = Math.abs(seg.x - knight.x) / UNIT_SIZE;
+                    const dy = Math.abs(seg.y - knight.y) / UNIT_SIZE;
+                    if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1)) {
+                        // Adjacent (8 directions)
+                        let dmg = getKnightDmg() * (i === 0 ? HEAD_DMG_MULTIPLIER : BODY_DMG_MULTIPLIER);
+                        gameState.currentHP -= dmg;
+                        document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+                        knight.lastAttackTime = now;
+                        knight.flashUntil = now + 150; // flash for 150ms
+                        // Only damage once per attack interval per knight
+                        if (gameState.currentHP <= 0) {
+                            gameState.state = STATES.GAME_OVER;
+                        }
+                        break;
+                    }
+                }
+            }
+        });
+
         gameState.cameraOffset.x = gameState.snake[0].x;
         gameState.cameraOffset.y = gameState.snake[0].y;
     }
@@ -159,6 +219,18 @@ function render() {
 }
 
 function renderGame(canvas, ctx, isOverview = false) {
+    if (renderOverlayIfPausedOrGameOver(canvas, ctx, isOverview)) return;
+
+    prepareCanvasTransform(ctx, canvas, isOverview);
+    renderBoardChunks(ctx, isOverview);
+    renderSnake(ctx, isOverview);
+    renderFood(ctx);
+    renderAdventurers(ctx);
+    ctx.restore(); // Restore the context to its original state before drawing in screen coordinates
+    renderIndicators(ctx, canvas, isOverview);
+}
+
+function renderOverlayIfPausedOrGameOver(canvas, ctx, isOverview) {
     if ((gameState.state === STATES.GAME_OVER || gameState.state === STATES.PAUSED) && !isOverview) {
         ctx.font = "30px Tahoma";
         ctx.textAlign = "center";
@@ -184,9 +256,12 @@ function renderGame(canvas, ctx, isOverview = false) {
             ctx.fillStyle = "black";
             ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
         }
-        return;
+        return true;
     }
+    return false;
+}
 
+function prepareCanvasTransform(ctx, canvas, isOverview) {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -211,17 +286,16 @@ function renderGame(canvas, ctx, isOverview = false) {
             canvas.height / ((boardBounds.maxY - boardBounds.minY + 4) * BOARD_CHUNK_SIZE * UNIT_SIZE));
         ctx.scale(scaleFactor, scaleFactor);
         ctx.translate(canvas.width / scaleFactor / 2 - shiftX, canvas.height / scaleFactor / 2 - shiftY);
-
-        
-    }
-    else {
+    } else {
         ctx.translate(canvas.width / 2 - gameState.cameraOffset.x, canvas.height / 2 - gameState.cameraOffset.y);
     }
-    
+}
+
+function renderBoardChunks(ctx, isOverview) {
     // Convert board chunks to array of coordinates for easier processing
     const chunkCoords = getChunkCoords(gameState.boardChunks);
     
-    // First draw chunk fill
+    // Draw chunk fill
     ctx.beginPath();
     chunkCoords.forEach(chunk => {
         const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
@@ -236,7 +310,7 @@ function renderGame(canvas, ctx, isOverview = false) {
     ctx.fillStyle = "khaki";
     ctx.fill();
     
-    // Now draw the border
+    // Draw borders
     ctx.beginPath();
     ctx.strokeStyle = "#444";
     ctx.lineWidth = 2;
@@ -248,10 +322,10 @@ function renderGame(canvas, ctx, isOverview = false) {
         const size = BOARD_CHUNK_SIZE * UNIT_SIZE;
         // Only process this chunk if it's in view OR one of its neighbors is in view
         if (isInCamView(x, y) ||
-            isInCamView(x + size, y) ||   // Right neighbor
-            isInCamView(x - size, y) ||   // Left neighbor
-            isInCamView(x, y + size) ||   // Bottom neighbor
-            isInCamView(x, y - size) ||   // Top neighbor
+            isInCamView(x + size, y) ||
+            isInCamView(x - size, y) ||
+            isInCamView(x, y + size) ||
+            isInCamView(x, y - size) ||
             isOverview
         ) {
             // Check top edge
@@ -278,8 +352,9 @@ function renderGame(canvas, ctx, isOverview = false) {
     });
     
     ctx.stroke();
-    
-    // Draw snake
+}
+
+function renderSnake(ctx, isOverview) {
     gameState.snake.forEach((segment, index) => {
         if (index === 0) {
             ctx.fillStyle = "blue";
@@ -301,28 +376,47 @@ function renderGame(canvas, ctx, isOverview = false) {
         ctx.lineTo(prevSegment.x + UNIT_SIZE / 2, prevSegment.y + UNIT_SIZE / 2);
         ctx.stroke();
     });
+}
 
-    // Draw food
+function renderFood(ctx) {
     ctx.fillStyle = "red";
     ctx.fillRect(gameState.food.x, gameState.food.y, UNIT_SIZE, UNIT_SIZE);
-    ctx.restore();
+}
 
-    // Draw food direction indicator
+function renderAdventurers(ctx) {
+    renderKnights(ctx);
+    // maybe more adventurers in the future
+    //renderMages(ctx);
+    //renderArchers(ctx);
+}
+
+function renderKnights(ctx) {
+    // render each knight
+    if (!gameState.knights) return; // if knights are not defined, do nothing
+    const now = performance.now();
+    gameState.knights.forEach(knight => {
+        if (knight.flashUntil && now < knight.flashUntil) {
+            ctx.fillStyle = "lightslategrey"; // flash color
+        } else {
+            ctx.fillStyle = "lightsteelblue"; // normal color
+        }
+        ctx.fillRect(knight.x, knight.y, UNIT_SIZE, UNIT_SIZE);
+    });
+}
+
+function renderIndicators(ctx, canvas, isOverview) {
     if (INDICATOR_ON && !isOverview) {
         const indicatorRadius = UNIT_SIZE / 3;
         let paddingX = 0;
         let paddingY = 0;
-        
         // Calculate food position relative to camera view
         const relativeX = gameState.food.x - gameState.cameraOffset.x;
         const relativeY = gameState.food.y - gameState.cameraOffset.y;
         if (relativeX > 0) paddingX = UNIT_SIZE;
         if (relativeY > 0) paddingY = UNIT_SIZE;
-        
         // Calculate indicator position
         let indicatorX = Math.min(Math.max(relativeX + canvas.width / 2, paddingX), canvas.width - paddingX) + UNIT_SIZE/2;
         let indicatorY = Math.min(Math.max(relativeY + canvas.height / 2, paddingY), canvas.height - paddingY) + UNIT_SIZE/2;
-        
         // Draw the indicator
         ctx.fillStyle = "red";
         ctx.beginPath();
@@ -390,37 +484,65 @@ function expandBoard() {
 }
 
 function spawnFood() {
+    const foodPos = getUnoccupiedPosition();
+    gameState.food.x = foodPos.x;
+    gameState.food.y = foodPos.y;
+}
+
+function spawnKnight() {
+    const knightPos = getUnoccupiedPosition();
+    const knight = {
+        x: knightPos.x, 
+        y: knightPos.y,
+        lastAttackTime: 0 // Track last attack time for each knight
+    }
+    gameState.knights.push(knight);
+}
+
+function getUnoccupiedPosition() {
     // Select a random board chunk from the existing board chunks
     const chunkArray = Array.from(gameState.boardChunks);
     const randomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
     let [cx, cy] = randomChunk.split(",").map(Number);
     
+    const maxAttemptsPerChunk = Math.floor(BOARD_CHUNK_SIZE * BOARD_CHUNK_SIZE / 2);
+    let attempts = 0;
+
     // Keep trying until we find a valid position
-    let isValidPosition = false;
-    while (!isValidPosition) {
-        // Generate potential food position within the chunk boundaries
+    while (true) {
+        // Generate potential unoccupied position within the chunk boundaries
         const potentialX = cx * BOARD_CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * BOARD_CHUNK_SIZE) * UNIT_SIZE;
         const potentialY = cy * BOARD_CHUNK_SIZE * UNIT_SIZE + Math.floor(Math.random() * BOARD_CHUNK_SIZE) * UNIT_SIZE;
-        // Check if this position overlaps with any snake segment
-        isValidPosition = true;
-        for (const segment of gameState.snake) {
-            if (segment.x === potentialX && segment.y === potentialY) {
-                isValidPosition = false;
-                break;
-            }
+
+        
+        if (!isPositionOccupied(potentialX, potentialY)) {
+            return { x: potentialX, y: potentialY };
         }
-        // If position is valid, set the food coordinates
-        if (isValidPosition) {
-            gameState.food.x = potentialX;
-            gameState.food.y = potentialY;
-            break;
-        }
-        // If we've tried too many times in this chunk, pick a new random chunk
-        if (Math.random() < 0.1) {  // 10% chance to switch chunks if stuck
-            const newRandomChunk = chunkArray[Math.floor(Math.random() * chunkArray.length)];
-            [cx, cy] = newRandomChunk.split(",").map(Number);
+
+        attempts++;
+        // If we've tried enough times in this chunk, switch to a new random chunk
+        if (attempts >= maxAttemptsPerChunk) {
+            attempts = 0;
+            [cx, cy] = chunkArray[Math.floor(Math.random() * chunkArray.length)].split(",").map(Number);
         }
     }
+}
+
+function isPositionOccupied(x, y, forKnight) {
+    // Check snake
+    const key = `${x},${y}`;
+    if (gameState.snakePositions.has(key)) return true;
+    // Check food
+    if (gameState.food.x === x && gameState.food.y === y) return true;
+    // Check knights (if defined)
+    if (gameState.knights) {
+        for (const knight of gameState.knights) {
+            if (knight.x === x && knight.y === y) return true;
+        }
+    }
+    // Add more checks for other entity types here
+
+    return false; // Position is not occupied
 }
 
 document.addEventListener("keydown", (e) => {
