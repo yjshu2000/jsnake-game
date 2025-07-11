@@ -123,11 +123,16 @@
     
         <div id="instructions">
             <h2>Instructions</h2>
-            <p>Use the arrow keys to move the snake.</p>
+            <p>Use the arrow keys to move the snake (blue head, green body).</p>
             <p>Eat the food (red) to grow the snake.</p>
-            <p>Game over on hitting a wall or HP reaches 0.</p>
+            <p>Knights attack tiles 1 adjacent. (1/10 dmg to body)</p>
+            <p>Archers attack tiles 2 adjacent. (1/10 dmg to body)</p>
+            <p>Game over when HP reaches 0.</p>
             <p>On hitting self: -1 HP; -0.1 score</p>
             <p>On eating food: +0.1 HP; +4 score</p>
+            <p>On killing a knight (grey): +some HP; +1 score</p>
+            <p>On killing an archer (olive green): +some HP; +1 score</p>
+            <p>(Knights and archers dmg/hp-giving currently subject to change)</p>
             <p>Board space will grow in random directions as snake grows.</p>
             <p>Press ESC to pause/unpause.</p>
         </div>    
@@ -136,6 +141,10 @@
     <div id="version">
         <details>
             <summary>Version Notes</summary>
+            <p>Version 2.1.1 2025 Jul 11 H13</p>
+            <p>updated instructions.</p>
+            <p>Version 2.1 2025 Jul 11 H12</p>
+            <p>a bunch of stuff: start button enhanced; added archers; changed borders to deduct HP instead of instant kill</p>
             <p>Version 2 2025 Jul 9 H18</p>
             <p>added knight enemy!! (might still need some balancing)</p>
             <p>Version 1.5 2025 Jun 26 H12</p>
