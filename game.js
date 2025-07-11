@@ -12,6 +12,7 @@ const BOARD_CHUNK_SIZE = 4;
 const GROWTH_AMOUNT = 4;
 const FOOD_HEAL_RATE = 0.1; // health gained from eating food
 const SELF_COLLISION_DMG = 1;
+const OUT_COLLISION_DMG = 2;
 const HEAD_DMG_MULTIPLIER = 1.0;
 const BODY_DMG_MULTIPLIER = 0.1;
 
@@ -27,11 +28,18 @@ let INDICATOR_ON = true;
 let PAUSE_OVERVIEW_ON = true;
 
 // enemy stats
-function getKnightDmg() { return MAX_HEALTH / 20; }
-function getKnightHealRate() { return getKnightDmg() * 4; } // health gained from killing a knight
+const BASE_DMG = 1/20; // ratio of MAX_HEALTH;
+function getKnightDmg() { return MAX_HEALTH * BASE_DMG; }
 function getKnightAtkRate() { return SNAKE_SPEED * 3; }
+function getKnightHealRate() { return getKnightDmg() * 1.5; } // health gained from killing a knight
 let KNIGHT_SCORE = 1; // score for killing a knight
 let FOOD_PER_KNIGHT = 10; //adjust for balance
+
+function getArcherDmg() { return MAX_HEALTH * BASE_DMG / 2; }
+function getArcherAtkRate() { return SNAKE_SPEED * 2; }
+function getArcherHealRate() { return getArcherDmg() * 3; } // health gained from killing an archer
+let ARCHER_SCORE = 1; // score for killing an archer
+let FOOD_PER_ARCHER = 10; //adjust for balance
 
 const gameState = {};
 
@@ -61,6 +69,7 @@ function initialization() {
     gameState.score = 0;
     gameState.currentHP = MAX_HEALTH;
     gameState.knights = [];
+    gameState.archers = [];
     gameState.foodEaten = 0;
 }
 
@@ -117,10 +126,14 @@ function update() {
         const chunkY = Math.floor(newHead.y / (BOARD_CHUNK_SIZE * UNIT_SIZE));
         const chunkKey = `${chunkX},${chunkY}`;
         if (!gameState.boardChunks.has(chunkKey)) {
-            gameState.state = STATES.GAME_OVER;
-            return;
+            updateScore(-1);
+            gameState.currentHP -= OUT_COLLISION_DMG;
+            document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+            if (gameState.currentHP <= 0) {
+                gameState.state = STATES.GAME_OVER;
+                return;
+            }
         }
-
         // Check for collision with self
         const newHeadKey = `${newHead.x},${newHead.y}`;
         if (gameState.snakePositions.has(newHeadKey)) {
@@ -146,6 +159,9 @@ function update() {
                 (gameState.foodEaten > 0 && gameState.foodEaten % FOOD_PER_KNIGHT === 0)) {
                 spawnKnight();
             }
+            if (gameState.foodEaten == 4 || (gameState.foodEaten > 0 && gameState.foodEaten % FOOD_PER_ARCHER === 0)) {
+                spawnArcher();
+            }
             expandBoard(newHead);
             for (let i = 0; i < GROWTH_AMOUNT - 1; i++) { 
                 gameState.snake.push({ ...gameState.snake[gameState.snake.length - 1] }); 
@@ -157,17 +173,27 @@ function update() {
         // Check for collision with knights
         gameState.knights.forEach((knight, index) => {
             if (newHead.x === knight.x && newHead.y === knight.y) {
-                // increase score, remove knight, and increase health by *2 knight dmg
                 updateScore(KNIGHT_SCORE);
-                gameState.currentHP = Math.min(gameState.currentHP + getKnightDmg() * 2, MAX_HEALTH);
+                gameState.currentHP = Math.min(gameState.currentHP + getKnightHealRate(), MAX_HEALTH);
                 document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
                 gameState.knights.splice(index, 1);
-                spawnKnight(); // spawn a new knight immediately on knight death
+                spawnKnight();
+            }
+        });
+        // Check for collision with archers
+        gameState.archers.forEach((archer, index) => {
+            if (newHead.x === archer.x && newHead.y === archer.y) {
+                updateScore(ARCHER_SCORE);
+                gameState.currentHP = Math.min(gameState.currentHP + getArcherHealRate(), MAX_HEALTH);
+                document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+                gameState.archers.splice(index, 1);
+                spawnArcher();
             }
         });
 
-        // Knight damage logic: check if any snake segment is adjacent to any knight
+        // Knight and Archer damage logic
         const now = performance.now();
+        // Knight damage logic: check if any snake segment is adjacent to any knight
         gameState.knights.forEach(knight => {
             if (!knight.lastAttackTime) knight.lastAttackTime = 0;
             if (now - knight.lastAttackTime >= getKnightAtkRate()) {
@@ -184,6 +210,28 @@ function update() {
                         knight.lastAttackTime = now;
                         knight.flashUntil = now + 150; // flash for 150ms
                         // Only damage once per attack interval per knight
+                        if (gameState.currentHP <= 0) {
+                            gameState.state = STATES.GAME_OVER;
+                        }
+                        break;
+                    }
+                }
+            }
+        });
+        // Archer damage logic: check if any snake segment is within 5x5 area of any archer
+        gameState.archers.forEach(archer => {
+            if (!archer.lastAttackTime) archer.lastAttackTime = 0;
+            if (now - archer.lastAttackTime >= getArcherAtkRate()) {
+                for (let i = 0; i < gameState.snake.length; i++) {
+                    const seg = gameState.snake[i];
+                    const dx = Math.abs(seg.x - archer.x) / UNIT_SIZE;
+                    const dy = Math.abs(seg.y - archer.y) / UNIT_SIZE;
+                    if ((dx !== 0 || dy !== 0) && dx <= 2 && dy <= 2) {
+                        let dmg = getArcherDmg() * (i === 0 ? HEAD_DMG_MULTIPLIER : BODY_DMG_MULTIPLIER);
+                        gameState.currentHP -= dmg;
+                        document.getElementById("healthBar").style.width = `${UNIT_SIZE * gameState.currentHP}px`;
+                        archer.lastAttackTime = now;
+                        archer.flashUntil = now + 150;
                         if (gameState.currentHP <= 0) {
                             gameState.state = STATES.GAME_OVER;
                         }
@@ -385,6 +433,7 @@ function renderFood(ctx) {
 
 function renderAdventurers(ctx) {
     renderKnights(ctx);
+    renderArchers(ctx);
     // maybe more adventurers in the future
     //renderMages(ctx);
     //renderArchers(ctx);
@@ -396,11 +445,24 @@ function renderKnights(ctx) {
     const now = performance.now();
     gameState.knights.forEach(knight => {
         if (knight.flashUntil && now < knight.flashUntil) {
-            ctx.fillStyle = "lightslategrey"; // flash color
+            ctx.fillStyle = "lightslategrey"; // flash colour
         } else {
-            ctx.fillStyle = "lightsteelblue"; // normal color
+            ctx.fillStyle = "lightsteelblue"; // normal colour
         }
         ctx.fillRect(knight.x, knight.y, UNIT_SIZE, UNIT_SIZE);
+    });
+}
+
+function renderArchers(ctx) {
+    if (!gameState.archers) return;
+    const now = performance.now();
+    gameState.archers.forEach(archer => {
+        if (archer.flashUntil && now < archer.flashUntil) {
+            ctx.fillStyle = "DarkOliveGreen"; // flash colour
+        } else {
+            ctx.fillStyle = "OliveDrab"; // normal colour
+        }
+        ctx.fillRect(archer.x, archer.y, UNIT_SIZE, UNIT_SIZE);
     });
 }
 
@@ -499,6 +561,16 @@ function spawnKnight() {
     gameState.knights.push(knight);
 }
 
+function spawnArcher() {
+    const archerPos = getUnoccupiedPosition();
+    const archer = {
+        x: archerPos.x,
+        y: archerPos.y,
+        lastAttackTime: 0
+    };
+    gameState.archers.push(archer);
+}
+
 function getUnoccupiedPosition() {
     // Select a random board chunk from the existing board chunks
     const chunkArray = Array.from(gameState.boardChunks);
@@ -538,6 +610,12 @@ function isPositionOccupied(x, y, forKnight) {
     if (gameState.knights) {
         for (const knight of gameState.knights) {
             if (knight.x === x && knight.y === y) return true;
+        }
+    }
+    // Check archers (if defined)
+    if (gameState.archers) {
+        for (const archer of gameState.archers) {
+            if (archer.x === x && archer.y === y) return true;
         }
     }
     // Add more checks for other entity types here

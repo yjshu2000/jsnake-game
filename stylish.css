@@ -102,3 +102,23 @@ button {
 button:hover {
     background-color: #e6e6e6;
 }
+
+#startButton button {
+    font-family: 'Quantico', sans-serif;
+    font-weight: bold;
+    font-size: 1.5rem;
+    padding: 1rem 2rem;
+    background-color: lightSkyBlue;   /* button fill */
+    color: navy;                      /* text color */
+    border: 3px solid indigo;         /* border color */
+    border-radius: 8px;
+    box-shadow: 0 0 10px lightgrey;
+    transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#startButton button:hover {
+    background-color: skyBlue;
+    color: midnightBlue;
+    box-shadow: 0 0 12px grey;
+    transform: scale(1.04);
+}
