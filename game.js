@@ -741,7 +741,7 @@ function presetDefault() {
     document.getElementById("boardW").value = 3;
     document.getElementById("boardL").value = 3;
     document.getElementById("snakeSpeed").value = 200;
-    document.getElementById("maxHealth").value = 2;
+    document.getElementById("maxHealth").value = 4;
     document.getElementById("indicator").checked = true;
     document.getElementById("pauseOverview").checked = false;
 }
@@ -772,4 +772,3 @@ function presetHard() {
     document.getElementById("indicator").checked = true;
     document.getElementById("pauseOverview").checked = false;
 }
-
